@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 class UserController {
   static createUser = asyncHandler(async (req, res) => {
     const { email } = req.body;
-    const findUser = await User.findOne({email});
+    const findUser = await User.findOne({ email });
     if (!findUser) {
       const newUser = await User.create(req.body);
       res.json(newUser);
@@ -14,15 +14,22 @@ class UserController {
     }
   });
   static login = asyncHandler(async (req, res) => {
-    const { email , password } = req.body;
+    const { email, password } = req.body;
     const findUser = await User.findOne({ email });
     if (findUser && (await findUser.isPasswordMatched(password))) {
-      const refreshToken = jwt.sign({ userId: findUser._id }, process.env.JWT_SECRET);
+      const refreshToken = jwt.sign(
+        { userId: findUser._id },
+        process.env.JWT_SECRET
+      );
       res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         maxAge: 72 * 60 * 60 * 1000,
-      });;
-      const accessToken = jwt.sign({ userId: findUser._id }, process.env.JWT_SECRET,{ expiresIn: "1m" });
+      });
+      const accessToken = jwt.sign(
+        { userId: findUser._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1m" }
+      );
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
         {
@@ -34,26 +41,52 @@ class UserController {
         userId: updateuser?._id,
         fullName: updateuser?.fullName,
         email: updateuser?.email,
-        accessToken: accessToken
+        accessToken: accessToken,
       });
     } else {
       return res.status(401).json({
         status: false,
-        message: "Tài khoản hoặc mật khẩu không chính xác"
+        message: "Tài khoản hoặc mật khẩu không chính xác",
       });
     }
   });
-  static refreshToken = asyncHandler(async (req,res) => {
+
+  static logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken) throw new Error("không có refreshToken trong cookie");
     const refreshToken = cookie.refreshToken;
     const user = await User.findOne({ refreshToken });
-    if (!user) throw new Error(" No Refresh token present in db or not matched");
-    const newAccessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET,{ expiresIn: "1m" });
-      return res.json({
-        accessToken: newAccessToken
+    if (!user) {
+      res.clearCookie("refreshToken", {
+        httpOnly: true,
+        secure: true,
       });
-  })
+      return res.sendStatus(204);
+    }
+    await User.findOneAndUpdate({ refreshToken }, { refreshToken: "" });
+    res.clearCookie("refreshToken", {
+      httpOnly: true,
+      secure: true,
+    });
+    res.sendStatus(204);
+  });
+
+  static refreshToken = asyncHandler(async (req, res) => {
+    const cookie = req.cookies;
+    if (!cookie?.refreshToken)
+      throw new Error("không có refreshToken trong cookie");
+    const refreshToken = cookie.refreshToken;
+    const user = await User.findOne({ refreshToken });
+    if (!user) throw new Error("Không tìm thấy refreshToken trong database");
+    const newAccessToken = jwt.sign(
+      { userId: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "1m" }
+    );
+    return res.json({
+      accessToken: newAccessToken,
+    });
+  });
 }
 
 module.exports = UserController;
