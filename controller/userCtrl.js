@@ -13,6 +13,7 @@ class UserController {
       throw new Error("Email đã được sử dụng");
     }
   });
+
   static login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
@@ -53,7 +54,8 @@ class UserController {
 
   static logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
-    if (!cookie?.refreshToken) throw new Error("không có refreshToken trong cookie");
+    if (!cookie?.refreshToken)
+      throw new Error("không có refreshToken trong cookie");
     const refreshToken = cookie.refreshToken;
     const user = await User.findOne({ refreshToken });
     if (!user) {
@@ -71,6 +73,43 @@ class UserController {
     res.sendStatus(204);
   });
 
+  static getAllUser = asyncHandler(async (req, res) => {
+    try {
+      const getAllUser = await User.find();
+      res.status(200).json({
+        message: "Thành công",
+        data: getAllUser
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
+  static getUserById = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+      const getaUser = await User.findById(id);
+      res.status(200).json({
+        message: "Thành công",
+        data: getaUser
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
+  static deleteUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+      const deleteaUser = await User.findByIdAndDelete(id);
+      res.status(200).json({
+        message: "Xóa thành công",
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
+  });
+
   static refreshToken = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken)
@@ -86,6 +125,27 @@ class UserController {
     return res.json({
       accessToken: newAccessToken,
     });
+  });
+
+  static blockUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+      const blockUser = await User.findByIdAndUpdate(
+        id,
+        {
+          isBlocked: true,
+        },
+        {
+          new: true,
+        }
+      );
+      res.status(200).json({
+        message: "Khóa tài khoản thành công",
+        data: blockUser
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Error fetching users" });
+    }
   });
 }
 
