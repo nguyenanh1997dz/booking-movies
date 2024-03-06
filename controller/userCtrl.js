@@ -22,7 +22,7 @@ class UserController {
         httpOnly: true,
         maxAge: 72 * 60 * 60 * 1000,
       });;
-      const accessToken = jwt.sign({ userId: findUser._id }, process.env.JWT_SECRET,{ expiresIn: "10s" });
+      const accessToken = jwt.sign({ userId: findUser._id }, process.env.JWT_SECRET,{ expiresIn: "1m" });
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
         {
@@ -44,9 +44,14 @@ class UserController {
     }
   });
   static refreshToken = asyncHandler(async (req,res) => {
-    const refreshToken = req.cookies.refreshToken;
+    const cookie = req.cookies;
+    if (!cookie?.refreshToken) throw new Error("không có refreshToken trong cookie");
+    const refreshToken = cookie.refreshToken;
+    const user = await User.findOne({ refreshToken });
+    if (!user) throw new Error(" No Refresh token present in db or not matched");
+    const newAccessToken = jwt.sign({ userId: user._id }, process.env.JWT_SECRET,{ expiresIn: "1m" });
       return res.json({
-        refreshToken: refreshToken || 0
+        accessToken: newAccessToken
       });
   })
 }
