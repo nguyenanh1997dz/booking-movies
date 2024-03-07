@@ -16,53 +16,44 @@ class MovieController {
     }
   });
   static getAllMovie = asyncHandler(async (req, res) => {
-    const queryObj = { ...req.query };
-    const excludeFields = ["page", "sort", "limit", "fields", "genre"]
-    excludeFields.forEach((el) => delete queryObj[el]);
-    let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
-    let query = Movie.find(JSON.parse(queryStr)).populate("genre");
-    if (req.query.sort) {
-      const sortBy = req.query.sort.split(",").join(" ");
-      query = query.sort(sortBy);
-    } else {
-      query = query.sort("-createdAt");
-    }
-    if (req.query.genre) {
-        const genre = req.query.genre.trim();
-        const genreObject = await Genre.findOne({ name: new RegExp('^' + genre + '$', "i") });
-        console.log(genreObject);
+    const { page = 1, sort = '-createdAt', limit = 5, fields, genre, name, ...otherQueryParams } = req.query;
+    let query = Movie.find(otherQueryParams).populate("genre", "name");
+    query = query.sort(sort);
+    if (genre) {
+        const genreObject = await Genre.findOne({ name: new RegExp('^' + genre.trim() + '$', "i") });
         if (genreObject) {
-          query = query.where("genre").in([genreObject._id]); 
+            query = query.where("genre").in([genreObject._id]);
+        } else {
+            return res.status(401).json({
+                message: "Không tìm thấy phim phù hợp",
+            });
         }
-      }
-
-    if (req.query.fields) {
-      const fields = req.query.fields.split(",").join(" ");
-      query = query.select(fields);
+    }
+    if (fields) {
+        query = query.select(fields.split(","));
     } else {
-      query = query.select("-__v");
+        query = query.select("-__v");
     }
-    if (req.query.name) {
-        const keyword = req.query.name.trim(); //
-        const regex = new RegExp(keyword, 'i'); 
+    if (name) {
+        const keyword = name.trim();
+        const regex = new RegExp(keyword, 'i');
         query = query.where('name').regex(regex);
-      }
-    const page = req.query.page;
-    const limit = req.query.limit || 5;
-    const skip = (page - 1) * limit || 0;
-  
-    query = query.skip(skip).limit(limit);
-    if (req.query.page) {
-      const movieCount = await Movie.countDocuments();
-      if (skip >= movieCount) throw new Error("This Page does not exists");
     }
-    
-    const movie = await query;
-    return res.json({
-      movie: movie,
+
+    const skip = (page - 1) * limit;
+    const movie = await query.skip(skip).limit(limit);
+    const totalCount = await Movie.countDocuments(otherQueryParams);
+    const totalPages = Math.ceil(totalCount / limit);
+    if (page < 1 || page > totalPages) {
+      return res.status(400).json({ message: "Trang không tồn tại" });
+  }
+    return res.status(200).json({
+        message: "Thành công",
+        movie: movie,
+        currentPage: page,
+        totalPages: totalPages
     });
-  });
+});
   
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
