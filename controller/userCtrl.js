@@ -2,10 +2,6 @@ const { verifyToken } = require("../config/verifyToken");
 const User = require("../model/userModel");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
-const { cloudinaryUploadImg, cloudinaryDeleteImg } = require("../utils/cloundiary")
-
-
 class UserController {
   static createUser = asyncHandler(async (req, res) => {
     const { email } = req.body;
@@ -26,16 +22,14 @@ class UserController {
         { userId: findUser._id },
         process.env.JWT_SECRET
       );
-      res.cookie('refreshToken', refreshToken, {
+      res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
-        secure: false,
-        path: '/',
-        sameSite: 'strict',
+        maxAge: 72 * 60 * 60 * 1000,
       });
       const accessToken = jwt.sign(
         { userId: findUser._id },
         process.env.JWT_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: "1m" }
       );
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
@@ -117,24 +111,20 @@ class UserController {
   });
 
   static refreshToken = asyncHandler(async (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
-    if (!refreshToken) {
-      return res.status(403).json({ message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại" });
-    }
-
+    const cookie = req.cookies;
+    if (!cookie?.refreshToken)
+      throw new Error("không có refreshToken trong cookie");
+    const refreshToken = cookie.refreshToken;
     const user = await User.findOne({ refreshToken });
-
-    if (!user) {
-      return res.status(403).json({ message: "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại" });
-    }
-
+    if (!user) throw new Error("Không tìm thấy refreshToken trong database");
     const newAccessToken = jwt.sign(
       { userId: user._id },
       process.env.JWT_SECRET,
-      { expiresIn: "10m" }
+      { expiresIn: "1m" }
     );
-
-    return res.status(200).json({ accessToken: newAccessToken });
+    return res.json({
+      accessToken: newAccessToken,
+    });
   });
 
   static blockUser = asyncHandler(async (req, res) => {
@@ -157,43 +147,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
-  static unBlockUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    try {
-      const unBlockUser = await User.findByIdAndUpdate(
-        id,
-        {
-          isBlocked: false,
-        },
-        {
-          new: true,
-        }
-      );
-      res.status(200).json({
-        message: "Mở khóa tài khoản thành công",
-        data: unBlockUser
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Có lỗi khi lấy dữ liệu" });
-    }
-  });
-  static upLoadImage = asyncHandler(async (req, res) => {
-    try {
-      const uploader = (path) => cloudinaryUploadImg(path, "images");
-      const file = req.file;
-      const newpath = await uploader(file.path);
-      fs.unlinkSync(file.path);
-      res.json({
-        message: "Tải ảnh lên thành công",
-        newpath: newpath
-      })
-    } catch (error) {
-      res.status(401).json({
-        message: "Có lỗi trong quá trình tải ảnh"
-      })
-    }
-  })
 }
 
 module.exports = UserController;
