@@ -6,7 +6,7 @@ const { pageNotFound , errorHandler} = require('./middleware/errorHandler');
 const dotenv = require("dotenv").config();
 
 const app = express();
-const port = process.env.PORT ;
+
 // import routes
 const authRoute = require('./routes/authRoute')
 const movieRoute = require('./routes/moviesRoute')
@@ -17,8 +17,9 @@ const roomRoute = require('./routes/roomRoute')
 //database
 require('./config/db')
 // server configuration
-app.listen(port, () => {
-    console.log("Server listening on port " + port);
+const PORT = process.env.PORT ;
+app.listen(PORT, () => {
+    console.log("Server listening on port " + PORT);
 });
 //middleware
 
@@ -26,8 +27,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
-    credentials: true 
-}));
+    origin: process.env.BASE_CLIENT_URL, 
+    credentials: true
+  }));
 app.use(morgan("dev"));
 
 // routes
