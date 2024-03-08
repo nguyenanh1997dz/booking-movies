@@ -2,9 +2,9 @@ const asyncHandler = require("express-async-handler");
 const Branch = require("../model/branchModel");
 
 class BranchController {
-    static createBranch  = asyncHandler(async (req,res) =>{
+    static createBranch = asyncHandler(async (req, res) => {
         try {
-           const newBranch = await  Branch.create(req.body)
+            const newBranch = await Branch.create(req.body)
             return res.status(200).json({
                 message: "Tạo chi nhánh rạp thành công",
                 data: newBranch
@@ -15,13 +15,13 @@ class BranchController {
             })
         }
     })
-    static getAllBranch  = asyncHandler(async (req,res) =>{
+    static getAllBranch = asyncHandler(async (req, res) => {
         try {
             const allBranch = await Branch.find().populate({
                 path: 'cinema',
                 select: 'name'
             }).populate('rooms');
-            
+
             return res.status(200).json({
                 message: "Thành công",
                 data: allBranch
@@ -32,5 +32,25 @@ class BranchController {
             })
         }
     })
+
+    static getBranchByName = asyncHandler(async (req, res) => {
+        const { name } = req.query;
+        try {
+            const branches = await Branch.find({ name: { $regex: name, $options: 'i' } });
+            if (!branches || branches.length === 0) {
+                return res.status(404).json({
+                    message: "Không tìm thấy chi nhánh rạp"
+                });
+            }
+            return res.status(200).json({
+                message: "Thành công",
+                data: branches
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi tìm chi nhánh rạp " + error.message
+            });
+        }
+    });
 }
 module.exports = BranchController

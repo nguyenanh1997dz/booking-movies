@@ -28,13 +28,13 @@ const userSchema = new mongoose.Schema(
     address: {
       type: String,
     },
-    refreshToken:{
+    refreshToken: {
       type: String,
     },
     bookings: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Booking'
-      }]
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Booking'
+    }]
   },
   {
     timestamps: true,
@@ -50,7 +50,6 @@ userSchema.pre("save", async function (next) {
   next();
 });
 userSchema.methods.isPasswordMatched = async function (enteredPassword) {
-  console.log(enteredPassword);
   return await bcrypt.compare(enteredPassword, this.password);
 };
 module.exports = mongoose.model("User", userSchema);

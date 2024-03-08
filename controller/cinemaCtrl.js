@@ -1,9 +1,9 @@
 const asyncHandler = require("express-async-handler");
 const Cinema = require("../model/cinemaModel");
 class CinemaController {
-    static createCinema  = asyncHandler(async (req,res) =>{
+    static createCinema = asyncHandler(async (req, res) => {
         try {
-           const newCinema = await  Cinema.create(req.body)
+            const newCinema = await Cinema.create(req.body)
             return res.status(200).json({
                 message: "Tạo rạp thành công",
                 data: newCinema
@@ -14,9 +14,9 @@ class CinemaController {
             })
         }
     })
-    static getAllCinema  = asyncHandler(async (req,res) =>{
+    static getAllCinema = asyncHandler(async (req, res) => {
         try {
-           const allCinema = await  Cinema.find().populate("branches","name")
+            const allCinema = await Cinema.find().populate("branches", "name")
             return res.status(200).json({
                 message: "Thành công",
                 data: allCinema
@@ -27,10 +27,10 @@ class CinemaController {
             })
         }
     })
-    static getCinemaById  = asyncHandler(async (req,res) =>{
-        const {id} = req.params
+    static getCinemaById = asyncHandler(async (req, res) => {
+        const { id } = req.params
         try {
-           const cinema = await  Cinema.findById(id)
+            const cinema = await Cinema.findById(id)
             return res.status(200).json({
                 message: "Thành công",
                 data: cinema
@@ -41,5 +41,7 @@ class CinemaController {
             })
         }
     })
+
+
 }
 module.exports = CinemaController
