@@ -18,11 +18,11 @@ router.get("/get-user-by-id/:id",UserController.getUserById)
 
 router.delete("/delete-user/:id",UserController.deleteUser)
 
-router.put("/block-user/:id",UserController.blockUser)
+router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 
 router.put("/unblock-user/:id",UserController.unBlockUser)
 
-router.put("/edit-user",authMiddleware,UserController.updateUser)
+router.put("/edit-user",authMiddleware,UserController.changePassword)
 
 router.post("/user-img-upload",uploadPhoto.single("avatar"),imgResize,UserController.upLoadImage)
 module.exports = router;

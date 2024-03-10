@@ -107,7 +107,7 @@ class UserController {
     }
   });
 
-  static updateUser = asyncHandler(async (req, res) => {
+  static changePassword = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { password} = req.body; 
     try {
@@ -118,7 +118,10 @@ class UserController {
       if (password) {
         user.password = password;
         const updatedPassword = await user.save();
-        res.json(updatedPassword);
+        res.json({
+          message: "Cập nhật mật khẩu thành công",
+          data: updatedPassword.password
+        });
       }
     } catch (error) {
       res.status(500).json({ message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng." });
