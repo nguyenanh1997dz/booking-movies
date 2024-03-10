@@ -3,8 +3,11 @@ const User = require("../model/userModel");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const fs = require("fs");
-const { cloudinaryUploadImg, cloudinaryDeleteImg } = require("../utils/cloundiary")
-
+const bcrypt = require("bcrypt");
+const {
+  cloudinaryUploadImg,
+  cloudinaryDeleteImg,
+} = require("../utils/cloundiary");
 
 class UserController {
   static createUser = asyncHandler(async (req, res) => {
@@ -26,11 +29,11 @@ class UserController {
         { userId: findUser._id },
         process.env.JWT_SECRET
       );
-      res.cookie('refreshToken', refreshToken, {
+      res.cookie("refreshToken", refreshToken, {
         httpOnly: true,
         secure: false,
-        path: '/',
-        sameSite: 'strict',
+        path: "/",
+        sameSite: "strict",
       });
       const accessToken = jwt.sign(
         { userId: findUser._id },
@@ -84,7 +87,7 @@ class UserController {
       const getAllUser = await User.find();
       res.status(200).json({
         message: "Thành công",
-        data: getAllUser
+        data: getAllUser,
       });
     } catch (error) {
       res.status(500).json({ message: "Error fetching users" });
@@ -97,12 +100,31 @@ class UserController {
       const getaUser = await User.findById(id);
       res.status(200).json({
         message: "Thành công",
-        data: getaUser
+        data: getaUser,
       });
     } catch (error) {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
+
+  static updateUser = asyncHandler(async (req, res) => {
+    const { _id } = req.user;
+    const { password} = req.body; 
+    try {
+      const user = await User.findById(_id);
+      if (!user) {
+        return res.status(404).json({ message: "Người dùng không tồn tại." });
+      }
+      if (password) {
+        user.password = password;
+        const updatedPassword = await user.save();
+        res.json(updatedPassword);
+      }
+    } catch (error) {
+      res.status(500).json({ message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng." });
+    }
+  })
+  
 
   static deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -118,14 +140,23 @@ class UserController {
 
   static refreshToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
+    console.log(refreshToken);
     if (!refreshToken) {
-      return res.status(403).json({ message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại" });
+      return res
+        .status(403)
+        .json({
+          message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại",
+        });
     }
 
     const user = await User.findOne({ refreshToken });
-
     if (!user) {
-      return res.status(403).json({ message: "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại" });
+      return res
+        .status(403)
+        .json({
+          message:
+            "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại",
+        });
     }
 
     const newAccessToken = jwt.sign(
@@ -151,7 +182,7 @@ class UserController {
       );
       res.status(200).json({
         message: "Khóa tài khoản thành công",
-        data: blockUser
+        data: blockUser,
       });
     } catch (error) {
       res.status(500).json({ message: "Error fetching users" });
@@ -172,12 +203,13 @@ class UserController {
       );
       res.status(200).json({
         message: "Mở khóa tài khoản thành công",
-        data: unBlockUser
+        data: unBlockUser,
       });
     } catch (error) {
       res.status(500).json({ message: "Có lỗi khi lấy dữ liệu" });
     }
   });
+
   static upLoadImage = asyncHandler(async (req, res) => {
     try {
       const uploader = (path) => cloudinaryUploadImg(path, "images");
@@ -186,14 +218,14 @@ class UserController {
       fs.unlinkSync(file.path);
       res.json({
         message: "Tải ảnh lên thành công",
-        newpath: newpath
-      })
+        newpath: newpath,
+      });
     } catch (error) {
       res.status(401).json({
-        message: "Có lỗi trong quá trình tải ảnh"
-      })
+        message: "Có lỗi trong quá trình tải ảnh",
+      });
     }
-  })
+  });
 }
 
 module.exports = UserController;

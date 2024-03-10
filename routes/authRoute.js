@@ -22,5 +22,7 @@ router.put("/block-user/:id",UserController.blockUser)
 
 router.put("/unblock-user/:id",UserController.unBlockUser)
 
+router.put("/edit-user",authMiddleware,UserController.updateUser)
+
 router.post("/user-img-upload",uploadPhoto.single("avatar"),imgResize,UserController.upLoadImage)
 module.exports = router;
