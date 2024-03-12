@@ -11,11 +11,10 @@ const roomSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch'
     },
-    // lịch chiếu
-    schedules: [{
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Schedule'
-    }]
+    numberOfSeats: {
+        type: Number,
+        default: 60
+    },
 });
 
 module.exports = mongoose.model('Room', roomSchema);

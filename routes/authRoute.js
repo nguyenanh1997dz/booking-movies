@@ -1,7 +1,6 @@
 const express = require("express");
 const UserController = require("../controller/userCtrl");
 const { authMiddleware, isAdmin} = require("../middleware/authMiddlewere");
-const { uploadPhoto,imgResize } = require("../middleware/upLoadImage");
 const router = express.Router();
 
 router.post("/register",UserController.createUser);
@@ -22,7 +21,10 @@ router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 
 router.put("/unblock-user/:id",UserController.unBlockUser)
 
-router.put("/edit-user",authMiddleware,UserController.changePassword)
+router.put("/change-password",authMiddleware,UserController.changePassword)
 
-router.post("/user-img-upload",uploadPhoto.single("avatar"),imgResize,UserController.upLoadImage)
+router.get("/forgot-password/:email",UserController.forgotPassword)
+
+router.post("/reset-password",UserController.reset_Password)
+
 module.exports = router;

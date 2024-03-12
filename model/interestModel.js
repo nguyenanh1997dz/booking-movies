@@ -19,13 +19,9 @@ const interestSchema = new mongoose.Schema({
     endTime: {
         type: Date
     },
-    seats: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Seat'
-        }],
-        default: []
+    status:{
+        type: String,
+        default: "Sắp chiếu"
     }
-
 })
 module.exports = mongoose.model("Interest", interestSchema);

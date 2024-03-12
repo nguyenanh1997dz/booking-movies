@@ -2,12 +2,10 @@ const { verifyToken } = require("../config/verifyToken");
 const User = require("../model/userModel");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
-const fs = require("fs");
 const bcrypt = require("bcrypt");
-const {
-  cloudinaryUploadImg,
-  cloudinaryDeleteImg,
-} = require("../utils/cloundiary");
+var notp = require('notp');
+const sendEmail = require("../utils/sendMail");
+
 
 class UserController {
   static createUser = asyncHandler(async (req, res) => {
@@ -128,6 +126,57 @@ class UserController {
     }
   })
   
+  static forgotPassword = asyncHandler(async (req, res) => {
+    const { email } = req.params;
+    if (!email) throw new Error("Không có email");
+    const user = await User.findOne({ email });
+    if (!user) throw new Error("Email không có trong database");
+    const otp = notp.totp.gen(process.env.KEY_SECRET_OTP);
+    console.log(typeof(otp));
+    const html = `
+        <p>Xin chào ${user.fullName},</p>
+        <p>Dưới đây là mã OTP của bạn để đặt lại mật khẩu có hiệu lực trong vòng 5 phút:</p>
+        <h2 style="background-color: #f4f4f4; padding: 10px; display:inline">${otp}</h2>
+        <p>Đừng chia sẻ mã OTP này với người khác.</p>
+        <p>Trân trọng,</p>
+        <p>Đội ngũ hỗ trợ của chúng tôi</p>
+    `;
+    const data = {
+        to: "nguyenanh1997dz@gmail.com",
+        subject: "Yêu cầu đặt lại mật khẩu",
+        html: html,
+    };
+    try {
+        await sendEmail(data);
+        return res.json({ message: "Email chứa mã OTP đã được gửi đến địa chỉ email của bạn." });
+    } catch (error) {
+        throw new Error("Đã xảy ra lỗi khi gửi email.");
+    }
+});
+
+  static reset_Password = asyncHandler(async (req, res) => {
+    const {otp, password,email} = req.body;
+    if (!otp || !password || !email) {
+      return res.status(401).json({
+        message: "Thiếu thông tin."
+      })
+    }
+    const user = await User.findOne({email: email});
+    if (!user){
+      return res.status(401).json({
+        message: "Không tìm thấy email."
+      })
+    }
+    const verified = notp.totp.verify(otp, process.env.KEY_SECRET_OTP);
+    console.log(otp,verified);
+    if (!verified) {
+      return res.status(400).json({ message: "Mã OTP không hợp lệ" });
+  }
+    user.password = password;
+    const updatedPassword = await user.save();
+    res.status(200).json({ message: "Thành công", data:updatedPassword
+  })
+  })
 
   static deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
@@ -210,23 +259,6 @@ class UserController {
       });
     } catch (error) {
       res.status(500).json({ message: "Có lỗi khi lấy dữ liệu" });
-    }
-  });
-
-  static upLoadImage = asyncHandler(async (req, res) => {
-    try {
-      const uploader = (path) => cloudinaryUploadImg(path, "images");
-      const file = req.file;
-      const newpath = await uploader(file.path);
-      fs.unlinkSync(file.path);
-      res.json({
-        message: "Tải ảnh lên thành công",
-        newpath: newpath,
-      });
-    } catch (error) {
-      res.status(401).json({
-        message: "Có lỗi trong quá trình tải ảnh",
-      });
     }
   });
 }

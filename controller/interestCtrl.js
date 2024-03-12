@@ -58,10 +58,6 @@ class InterestController {
         try {
             const interestId = req.params.id;
             const updatedInterest = await Interest.findByIdAndUpdate(interestId, { seats });
-
-
-
-
             return res.status(200).json({
                 message: "Cập nhật suất chiếu phim thành công",
                 data: updatedInterest

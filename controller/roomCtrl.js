@@ -17,7 +17,7 @@ class RoomController {
     })
     static getAllRoom  = asyncHandler(async (req,res) =>{
         try {
-           const allRoom = await  Room.find().populate("branch","name")
+           const allRoom = await  Room.find()
             return res.status(200).json({
                 message: "Thành công",
                 data: allRoom

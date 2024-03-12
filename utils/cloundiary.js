@@ -25,16 +25,27 @@ const cloudinaryDeleteImg = async (fileToDelete) => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.destroy(fileToDelete, (error, result) => {
       if (error) {
+        console.error('Lỗi khi xóa hình ảnh từ Cloudinary:', error);
         reject(error);
       } else {
-        resolve({
-          url: result.secure_url,
-          asset_id: result.asset_id,
-          public_id: result.public_id,
-        });
+        if (result.result === 'not found') {
+          console.warn('Hình ảnh đã không tồn tại trên Cloudinary:', result);
+          resolve(); // Hình ảnh đã không tồn tại, coi như xóa thành công
+        } else if (result.result === 'ok') {
+          console.log('Xóa hình ảnh thành công từ Cloudinary:', result);
+          resolve({
+            url: result.secure_url,
+            asset_id: result.asset_id,
+            public_id: result.public_id,
+          });
+        } else {
+          console.error('Xóa hình ảnh không thành công từ Cloudinary:', result);
+          reject(new Error('Xóa không thành công'));
+        }
       }
     });
   });
 };
+
 
 module.exports = { cloudinaryUploadImg, cloudinaryDeleteImg };
