@@ -8,6 +8,9 @@ const cinemaSchema = new mongoose.Schema({
     address:{
         type: String,
     },
+    image:{
+        type: Object,
+    },
     phone:{
         type: String,
     },

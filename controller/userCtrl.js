@@ -142,7 +142,7 @@ class UserController {
         <p>Đội ngũ hỗ trợ của chúng tôi</p>
     `;
     const data = {
-        to: "nguyenanh1997dz@gmail.com",
+        to: email,
         subject: "Yêu cầu đặt lại mật khẩu",
         html: html,
     };

@@ -18,6 +18,7 @@ const roomRoute = require('./routes/roomRoute')
 const interestRoute = require('./routes/interestRoute')
 const bookRoute = require('./routes/bookRoute')
 const uploadImgRoute = require('./routes/uploadImageRoute')
+const vnpayRoute = require('./routes/vnpayRoute')
 //database
 require('./config/db')
 // server configuration
@@ -45,6 +46,7 @@ app.use("/api/v1/room", roomRoute);
 app.use("/api/v1/interest", interestRoute);
 app.use("/api/v1/book", bookRoute);
 app.use("/api/v1/img", uploadImgRoute);
+app.use("/api/v1/vnpay", vnpayRoute);
 // error handler
 app.use('*', pageNotFound)
 app.use(errorHandler)
