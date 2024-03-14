@@ -9,19 +9,16 @@ const interestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch'
     },
-    room: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Room'
-    },
     startTime: {
         type: Date
     },
     endTime: {
         type: Date
     },
-    status:{
-        type: String,
-        default: "Sắp chiếu"
+    bookedSeats: {
+        type: Object
     }
+
+
 })
 module.exports = mongoose.model("Interest", interestSchema);

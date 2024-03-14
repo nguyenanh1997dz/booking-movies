@@ -4,6 +4,10 @@ const bookSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
+  branch: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Branch'
+  },
   interest: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Interest'
