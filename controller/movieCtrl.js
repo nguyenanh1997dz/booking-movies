@@ -1,7 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
-
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
     try {
@@ -55,6 +54,7 @@ class MovieController {
         totalPages: totalPages
     });
 });
+  
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
