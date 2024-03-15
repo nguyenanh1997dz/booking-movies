@@ -16,7 +16,14 @@ class CinemaController {
     })
     static getAllCinema = asyncHandler(async (req, res) => {
         try {
-            const allCinema = await Cinema.find().populate("branches", "name")
+            const allCinema = await Cinema.find().populate({
+                path: 'branches',
+                select: 'name ',
+                populate: {
+                    path: 'rooms',
+                    select: 'name'
+                }
+            });
             return res.status(200).json({
                 message: "Thành công",
                 data: allCinema

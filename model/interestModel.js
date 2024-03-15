@@ -5,15 +5,15 @@ const interestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Movie'
     },
-    branch: {
+    room: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Branch'
+        ref: 'Room'
     },
     startTime: {
-        type: Date
+        type: String
     },
     endTime: {
-        type: Date
+        type: String
     },
     bookedSeats: {
         type: Object

@@ -15,29 +15,30 @@ class MovieController {
       });
     }
   });
+
   static getAllMovie = asyncHandler(async (req, res) => {
     const { page = 1, sort = '-createdAt', limit = 5, fields, genre, name, ...otherQueryParams } = req.query;
     let query = Movie.find(otherQueryParams).populate("genre", "name");
     query = query.sort(sort);
     if (genre) {
-        const genreObject = await Genre.findOne({ name: new RegExp('^' + genre.trim() + '$', "i") });
-        if (genreObject) {
-            query = query.where("genre").in([genreObject._id]);
-        } else {
-            return res.status(401).json({
-                message: "Không tìm thấy phim phù hợp",
-            });
-        }
+      const genreObject = await Genre.findOne({ name: new RegExp('^' + genre.trim() + '$', "i") });
+      if (genreObject) {
+        query = query.where("genre").in([genreObject._id]);
+      } else {
+        return res.status(401).json({
+          message: "Không tìm thấy phim phù hợp",
+        });
+      }
     }
     if (fields) {
-        query = query.select(fields.split(","));
+      query = query.select(fields.split(","));
     } else {
-        query = query.select("-__v");
+      query = query.select("-__v");
     }
     if (name) {
-        const keyword = name.trim();
-        const regex = new RegExp(keyword, 'i');
-        query = query.where('name').regex(regex);
+      const keyword = name.trim();
+      const regex = new RegExp(keyword, 'i');
+      query = query.where('name').regex(regex);
     }
 
     const skip = (page - 1) * limit;
@@ -46,15 +47,15 @@ class MovieController {
     const totalPages = Math.ceil(totalCount / limit);
     if (page < 1 || page > totalPages) {
       return res.status(400).json({ message: "Trang không tồn tại" });
-  }
+    }
     return res.status(200).json({
-        message: "Thành công",
-        movie: movie,
-        currentPage: page,
-        totalPages: totalPages
+      message: "Thành công",
+      movie: movie,
+      currentPage: page,
+      totalPages: totalPages
     });
-});
-  
+  });
+
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {

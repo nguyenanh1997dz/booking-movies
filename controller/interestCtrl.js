@@ -7,13 +7,15 @@ const Room = require("../model/roomModel")
 class InterestController {
     static createInterest = asyncHandler(async (req, res) => {
         try {
-            const startTime = new Date(req.body.startTime);
+            const startTime = req.body.startTime
+
             const movieDuration = await Movie.findById(req.body.movie).select('duration');
-            const endTime = new Date(startTime.getTime() + movieDuration.duration * 60000);
+            const endTime = startTime + movieDuration.duration * 60000
+            console.log(startTime)
+            console.log(endTime)
+            const bStartTime = startTime - 10 * 60000
 
-            const bStartTime = new Date(startTime.getTime() - 10 * 60000);
-
-            const aEndTime = new Date(endTime.getTime() + 10 * 60000);
+            const aEndTime = endTime + 10 * 60000
 
             const existingInterest = await Interest.find({
                 $or: [
@@ -31,7 +33,6 @@ class InterestController {
                     }
                 ],
 
-                branch: req.body.branch,
                 room: req.body.room
             });
 
@@ -45,7 +46,7 @@ class InterestController {
 
             const data = {
                 ...req.body,
-                endTime: endTime.toISOString()
+                endTime: endTime
             }
 
             const newInterest = await Interest.create(data);
@@ -62,25 +63,75 @@ class InterestController {
 
 
     static getInterest = asyncHandler(async (req, res) => {
+        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
+
         try {
-            let query = {};
-            const currentDate = new Date();
 
-            if (req.query.day) {
-                const dayOffset = parseInt(req.query.day);
-                const targetDate = new Date(currentDate);
-                targetDate.setDate(currentDate.getDate() + dayOffset);
+            const interests = await Interest.find(query).populate("movie", "name").populate("room", "name");
 
-                const nextDate = new Date(currentDate);
-                nextDate.setDate(currentDate.getDate() + dayOffset + 1);
+            return res.status(200).json({
+                message: "Thành công",
+                data: interests
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình lấy dữ liệu suất chiếu phim " + error.message
+            });
+        }
+    });
 
-                query.startTime = {
-                    $gte: targetDate,
-                    $lt: nextDate
-                };
-            }
+    static getInterestn = asyncHandler(async (req, res) => {
+        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
+        const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
 
-            const interests = await Interest.find(query).populate("movie", "name").populate("branch", "name").populate("room", "name");
+        try {
+            const interests = await Interest.aggregate([
+
+                {
+                    $addFields: {
+                        startDate: {
+                            $toDate: {
+                                $toLong: "$startTime"
+                            }
+                        }
+                    }
+                },
+
+                {
+                    $group: {
+                        _id: {
+                            date: {
+                                $dateToString: {
+                                    format: "%Y-%m-%d",
+                                    date: "$startDate"
+                                }
+                            },
+                            movie: "$movie"
+                        },
+                        interests: {
+                            $push: {
+                                _id: "$_id",
+                                room: "$room",
+                                startTime: "$startTime",
+                                endTime: "$endTime",
+                                bookedSeats: "$bookedSeats"
+                            }
+                        }
+                    }
+                },
+
+                {
+                    $group: {
+                        _id: "$_id.date",
+                        movies: {
+                            $push: {
+                                movie: "$_id.movie",
+                                interests: "$interests"
+                            }
+                        }
+                    }
+                }
+            ]);
 
             return res.status(200).json({
                 message: "Thành công",
@@ -96,22 +147,34 @@ class InterestController {
 
 
 
+
+
+
+
     static updateInterest = asyncHandler(async (req, res) => {
-        const { seats } = req.body;
+        const { bookedSeats } = req.body;
+        console.log(bookedSeats)
         try {
             const interestId = req.params.id;
-            const updatedInterest = await Interest.findByIdAndUpdate(interestId, { seats });
+            const interest = await Interest.findById(interestId);
 
+            if (interest.bookedSeats.includes(bookedSeats)) {
+                return res.status(400).json({
+                    message: "Ghế đã được đặt trước đó."
+                });
+            }
 
+            interest.bookedSeats.push(bookedSeats)
+            interest.save()
 
 
             return res.status(200).json({
-                message: "Cập nhật suất chiếu phim thành công",
-                data: updatedInterest
+                message: "Cập nhật ghế thành công",
+                data: interest
             });
         } catch (error) {
             return res.status(500).json({
-                message: "Có lỗi trong quá trình cập nhật suất chiếu phim " + error.message
+                message: "Có lỗi trong quá trình cập nhật ghế " + error.message
             });
         }
     });
