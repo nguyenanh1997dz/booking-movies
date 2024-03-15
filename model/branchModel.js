@@ -1,14 +1,14 @@
 const mongoose = require("mongoose");
 
 const branchSchema = new mongoose.Schema({
-    name:{
+    name: {
         type: String,
         required: true,
     },
-    address:{
+    address: {
         type: String,
     },
-    phone:{
+    phone: {
         type: String,
     },
     cinema: {
@@ -19,5 +19,7 @@ const branchSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room'
     }]
+
+
 })
 module.exports = mongoose.model("Branch", branchSchema);
