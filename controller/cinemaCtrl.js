@@ -49,6 +49,11 @@ class CinemaController {
         }
     })
 
-
+    static updateCinema = asyncHandler(async (req, res) => {
+        const { id } = req.params
+        const updateCinema = await Cinema.findOneAndUpdate({ _id: id },req.body,{new: true})
+        console.log(updateCinema);
+        return res.status(200).json({})
+    })
 }
 module.exports = CinemaController
