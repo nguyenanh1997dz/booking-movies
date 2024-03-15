@@ -44,17 +44,10 @@ class RoomController {
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
             const roomId = req.params.id
-
-
-
-
-
             const branch = await Branch.findOne({ rooms: roomId })
             if (!branch) {
                 return res.status(404).json({ message: "Không tìm thấy chi nhánh chứa phòng này" })
             }
-
-
             const index = branch.rooms.indexOf(roomId)
             if (index !== -1) {
                 branch.rooms.splice(index, 1)

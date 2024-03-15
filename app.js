@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const { pageNotFound, errorHandler } = require('./middleware/errorHandler');
 const dotenv = require("dotenv").config();
 const compression = require('compression');
-
+const axios = require('axios');
 const app = express();
 
 // import routes
@@ -37,6 +37,10 @@ app.use(cors({
 app.use(morgan("dev"));
 app.use(compression());
 // routes
+
+// dùng để ngăn render tự sleep
+
+
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/movie", movieRoute);
 app.use("/api/v1/genre", genreRoute);
@@ -47,6 +51,12 @@ app.use("/api/v1/interest", interestRoute);
 app.use("/api/v1/book", bookRoute);
 app.use("/api/v1/img", uploadImgRoute);
 app.use("/api/v1/vnpay", vnpayRoute);
+// ping server when render sleep
+app.get("/ping",(req, res) => {
+    return res.json({
+        message:"Ping server"
+    })
+});
 // error handler
 app.use('*', pageNotFound)
 app.use(errorHandler)
