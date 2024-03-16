@@ -75,5 +75,18 @@ class MovieController {
       });
     }
   });
+
+  static deleteMovie = asyncHandler(async (req, res) => {
+    const movieId = req.params.id;
+    try {
+      const deletedMovie = await Movie.findOneAndDelete({ _id: movieId });
+      if (!deletedMovie) {
+        return res.status(404).json({ success: false, message: 'Phim không tồn tại' });
+      }
+      res.status(200).json({ success: true, message: 'Xóa phim thành công' });
+    } catch (error) {
+      res.status(500).json({ success: false, message: 'Lỗi xóa phim', error: error.message });
+    }
+  })
 }
 module.exports = MovieController;
