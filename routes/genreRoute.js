@@ -3,8 +3,9 @@ const { authMiddleware } = require("../middleware/authMiddlewere");
 const GenreController = require("../controller/genreCtrl");
 
 const router = express.Router();
-router.get("/",GenreController.getAllGenre)
-router.get("/:id",GenreController.getGenreById)
-router.post("/",GenreController.createGenre)
+router.get("/", GenreController.getAllGenre)
+router.get("/:id", GenreController.getGenreById)
+router.post("/", GenreController.createGenre)
+router.delete("/:id", GenreController.deleteGenre)
 
 module.exports = router;

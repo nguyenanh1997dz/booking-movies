@@ -1,18 +1,23 @@
+const UploadImageController = require("../service/uploadImage")
+
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
+
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
+    const img = await UploadImageController.upLoadImage(req, res)
     try {
-      const newMovie = await Movie.create(req.body);
-      return res.status(200).json({
-        message: "Tạo phim thành công",
-        data: newMovie,
+
+      const movie = new Movie({
+        ...req.body,
+        images: img
       });
+      await movie.save();
+      res.send('Phim đã được tạo thành công');
     } catch (error) {
-      return res.status(500).json({
-        message: "Có lỗi trong quá trình tạo phim " + error.message,
-      });
+      console.error(error);
+      res.status(400).send(error.message);
     }
   });
 
@@ -78,12 +83,17 @@ class MovieController {
 
   static deleteMovie = asyncHandler(async (req, res) => {
     const movieId = req.params.id;
+
     try {
-      const deletedMovie = await Movie.findOneAndDelete({ _id: movieId });
-      if (!deletedMovie) {
-        return res.status(404).json({ success: false, message: 'Phim không tồn tại' });
+      const foundMovie = await Movie.findById(movieId);
+      if (!foundMovie) {
+        return res.status(404).json({ success: false, message: 'Không tìm thấy bộ phim' });
       }
-      res.status(200).json({ success: true, message: 'Xóa phim thành công' });
+      const publicId = foundMovie.images.url
+      const xoaanh = await UploadImageController.deleteImage(publicId)
+
+      const deletedMovie = await Movie.findOneAndDelete({ _id: movieId })
+      res.send('xóa phim thành công');
     } catch (error) {
       res.status(500).json({ success: false, message: 'Lỗi xóa phim', error: error.message });
     }

@@ -2,10 +2,11 @@ const express = require("express");
 const { authMiddleware } = require("../middleware/authMiddlewere");
 const MovieController = require("../controller/movieCtrl");
 const router = express.Router();
+const { uploadPhoto, imgResize } = require("../middleware/upLoadImage");
 
 router.get("/", MovieController.getAllMovie)
 router.get("/:id", MovieController.getMovieById)
-router.post("/", MovieController.createMovie)
+router.post("/", uploadPhoto.single("image"), imgResize, MovieController.createMovie)
 router.delete("/:id", MovieController.deleteMovie)
 
 module.exports = router;

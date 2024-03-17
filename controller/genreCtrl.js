@@ -2,9 +2,9 @@ const asyncHandler = require("express-async-handler");
 const Genre = require("../model/genreModel")
 
 class GenreController {
-    static createGenre  = asyncHandler(async (req,res) =>{
+    static createGenre = asyncHandler(async (req, res) => {
         try {
-           const newGenre = await  Genre.create(req.body)
+            const newGenre = await Genre.create(req.body)
             return res.status(200).json({
                 message: "Tạo thể loại phim thành công",
                 data: newGenre
@@ -15,9 +15,9 @@ class GenreController {
             })
         }
     })
-    static getAllGenre  = asyncHandler(async (req,res) =>{
+    static getAllGenre = asyncHandler(async (req, res) => {
         try {
-           const genres = await  Genre.find()
+            const genres = await Genre.find()
             return res.status(200).json({
                 message: "Thành công",
                 data: genres
@@ -28,8 +28,8 @@ class GenreController {
             })
         }
     })
-    static getGenreById = asyncHandler(async (req,res) =>{
-        const {id} = req.params
+    static getGenreById = asyncHandler(async (req, res) => {
+        const { id } = req.params
         try {
             const genre = await Genre.findById(id).exec();
             if (!genre) {
@@ -45,6 +45,31 @@ class GenreController {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình lấy dữ liệu thể loại phim " + error.message
             });
+        }
+    })
+    static deleteGenre = asyncHandler(async (req, res) => {
+        try {
+            const genreId = req.params.id
+            // const genre = await Genre.findOne(genreId)
+            // if (!genre) {
+            //     return res.status(404).json({ message: "Không tìm thấy thể loại" })
+            // }
+            // const index = Movie.genre.indexOf(genreId)
+            // if (index !== -1) {
+            //     Movie.genre.splice(index, 1)
+            // }
+
+            await Genre.findByIdAndDelete(genreId);
+            // await branch.save()
+
+            return res.status(200).json({
+                message: "Xóa thể loại thành công",
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình xóa thể loại " + error.message
+            })
         }
     })
 }

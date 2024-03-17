@@ -7,6 +7,7 @@ const dotenv = require("dotenv").config();
 const compression = require('compression');
 const axios = require('axios');
 const app = express();
+const bodyParser = require('body-parser');
 
 // import routes
 const authRoute = require('./routes/authRoute')
@@ -17,7 +18,7 @@ const branchRoute = require('./routes/branchRoute')
 const roomRoute = require('./routes/roomRoute')
 const interestRoute = require('./routes/interestRoute')
 const bookRoute = require('./routes/bookRoute')
-const uploadImgRoute = require('./routes/uploadImageRoute')
+
 const vnpayRoute = require('./routes/vnpayRoute')
 //database
 require('./config/db')
@@ -40,6 +41,11 @@ app.use(compression());
 
 // dùng để ngăn render tự sleep
 
+app.use(bodyParser.urlencoded({
+    extended: true
+}));
+app.use(bodyParser.json());
+
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/movie", movieRoute);
@@ -49,12 +55,11 @@ app.use("/api/v1/branch", branchRoute);
 app.use("/api/v1/room", roomRoute);
 app.use("/api/v1/interest", interestRoute);
 app.use("/api/v1/book", bookRoute);
-app.use("/api/v1/img", uploadImgRoute);
 app.use("/api/v1/vnpay", vnpayRoute);
 // ping server when render sleep
-app.get("/ping",(req, res) => {
+app.get("/ping", (req, res) => {
     return res.json({
-        message:"Ping server"
+        message: "Ping server"
     })
 });
 // error handler

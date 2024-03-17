@@ -1,40 +1,40 @@
 const mongoose = require("mongoose");
 
 const movieSchema = new mongoose.Schema({
-    name:{
+    name: {
         type: String,
         required: true,
         unique: true
     },
-    description:{
+    description: {
         type: String,
         required: true,
     },
-    genre:{
+    genre: {
         type: [{
             type: mongoose.Schema.Types.ObjectId,
-             ref: 'Genre'
+            ref: 'Genre'
         }]
     },
-    cast:{
+    cast: {
         type: [String]
     },
-    director:{
+    director: {
         type: String
     },
     images: {
-        type: {}
+        type: Object
     },
     trailer: {
         type: String,
     },
-    releaseDate:{
-        type:Date
+    releaseDate: {
+        type: Date
     },
-    duration:{
-        type:Number
+    duration: {
+        type: Number
     }
-},{
+}, {
     timestamps: true
 }
 );
