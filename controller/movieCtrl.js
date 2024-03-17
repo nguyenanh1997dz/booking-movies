@@ -3,16 +3,24 @@ const UploadImageController = require("../service/uploadImage")
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
+const { parse } = require("dotenv");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
     const img = await UploadImageController.upLoadImage(req, res)
     try {
 
+
+      const { genre } = req.body
+
       const movie = new Movie({
+
         ...req.body,
-        images: img
+        images: img,
+        genre: JSON.parse(genre),
       });
+
+      console.log(movie)
       await movie.save();
       res.send('Phim đã được tạo thành công');
     } catch (error) {
@@ -90,7 +98,8 @@ class MovieController {
         return res.status(404).json({ success: false, message: 'Không tìm thấy bộ phim' });
       }
       const publicId = foundMovie.images.url
-      const xoaanh = await UploadImageController.deleteImage(publicId)
+      const filename = foundMovie.images.filename
+      const xoaanh = await UploadImageController.deleteImage(publicId, filename)
 
       const deletedMovie = await Movie.findOneAndDelete({ _id: movieId })
       res.send('xóa phim thành công');
