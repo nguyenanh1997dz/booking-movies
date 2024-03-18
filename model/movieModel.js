@@ -22,7 +22,7 @@ const movieSchema = new mongoose.Schema({
     director: {
         type: String
     },
-    images: {
+    image: {
         type: Object
     },
     trailer: {

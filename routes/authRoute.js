@@ -19,7 +19,7 @@ router.delete("/delete-user/:id",UserController.deleteUser)
 
 router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 
-router.put("/unblock-user/:id",UserController.unBlockUser)
+router.put("/unblock-user/:id",authMiddleware,isAdmin,UserController.unBlockUser)
 
 router.put("/change-password",authMiddleware,UserController.changePassword)
 
