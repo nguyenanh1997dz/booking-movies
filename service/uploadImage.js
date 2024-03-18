@@ -5,7 +5,7 @@ const {
     cloudinaryDeleteImg,
 } = require("../utils/cloundiary");
 const fs = require("fs");
-class UploadImageController {
+class UploadImageService {
     static upLoadImage = async (req, res,folder) => {
         try {
             const file = req.file;
@@ -17,8 +17,6 @@ class UploadImageController {
             fs.unlink(file.path, (err) => {
                 if (err) {
                     console.error('Có lỗi xóa file:', err);
-                } else {
-                    console.log('Xóa file thành công');
                 }
             });
             return newImg;
@@ -38,4 +36,4 @@ class UploadImageController {
         }
     }
 }
-module.exports = UploadImageController;
+module.exports = UploadImageService;

@@ -1,4 +1,4 @@
-const UploadImageController = require("../service/uploadImage")
+const UploadImageService = require("../service/uploadImage");
 
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
@@ -14,14 +14,14 @@ class MovieController {
         cast: JSON.parse(cast),
       });
       if (movie) {
-        const folder = "movies"
-        const img = await UploadImageController.upLoadImage(req, res,folder);
+        const folder = "movies";
+        const img = await UploadImageService.upLoadImage(req, res, folder);
         movie.image = img;
       }
       await movie.save();
       res.status(200).json({
         message: "Tạo phim thành công",
-        data:movie
+        data: movie,
       });
     } catch (error) {
       console.error(error);
@@ -30,11 +30,21 @@ class MovieController {
   });
 
   static getAllMovie = asyncHandler(async (req, res) => {
-    const { page = 1, sort = '-createdAt', limit = 5, fields, genre, name, ...otherQueryParams } = req.query;
+    const {
+      page = 1,
+      sort = "-createdAt",
+      limit = 5,
+      fields,
+      genre,
+      name,
+      ...otherQueryParams
+    } = req.query;
     let query = Movie.find(otherQueryParams).populate("genre", "name");
     query = query.sort(sort);
     if (genre) {
-      const genreObject = await Genre.findOne({ name: new RegExp('^' + genre.trim() + '$', "i") });
+      const genreObject = await Genre.findOne({
+        name: new RegExp("^" + genre.trim() + "$", "i"),
+      });
       if (genreObject) {
         query = query.where("genre").in([genreObject._id]);
       } else {
@@ -50,8 +60,8 @@ class MovieController {
     }
     if (name) {
       const keyword = name.trim();
-      const regex = new RegExp(keyword, 'i');
-      query = query.where('name').regex(regex);
+      const regex = new RegExp(keyword, "i");
+      query = query.where("name").regex(regex);
     }
 
     const skip = (page - 1) * limit;
@@ -65,7 +75,7 @@ class MovieController {
       message: "Thành công",
       movie: movie,
       currentPage: page,
-      totalPages: totalPages
+      totalPages: totalPages,
     });
   });
 
@@ -94,21 +104,29 @@ class MovieController {
     try {
       const foundMovie = await Movie.findById(movieId);
       if (!foundMovie) {
-        return res.status(404).json({ success: false, message: 'Không tìm thấy bộ phim' });
+        return res
+          .status(404)
+          .json({ success: false, message: "Không tìm thấy bộ phim" });
       }
       const public_id = foundMovie.image.public_id;
-       await UploadImageController.deleteImage(public_id)
-       await Movie.findOneAndDelete({ _id: movieId })
-      res.send('xóa phim thành công');
+      await UploadImageService.deleteImage(public_id);
+      await Movie.findOneAndDelete({ _id: movieId });
+      res.send("xóa phim thành công");
     } catch (error) {
-      res.status(500).json({ success: false, message: 'Lỗi xóa phim', error: error.message });
+      res
+        .status(500)
+        .json({
+          success: false,
+          message: "Lỗi xóa phim",
+          error: error.message,
+        });
     }
-  })
+  });
 
   static updateMovie = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { genre, cast, ...otherFields } = req.body;
-  
+
     try {
       let movie = await Movie.findById(id);
       if (!movie) {
@@ -118,17 +136,15 @@ class MovieController {
       if (genre) updatedFields.genre = JSON.parse(genre);
       if (cast) updatedFields.cast = JSON.parse(cast);
       if (req.file) {
-        updatedFields.image = await UploadImageController.upLoadImage(req, res)
-        await UploadImageController.deleteImage(movie.image?.public_id)
+        updatedFields.image = await UploadImageService.upLoadImage(req, res);
+        await UploadImageService.deleteImage(movie.image?.public_id);
       }
       await Movie.findByIdAndUpdate(id, { ...updatedFields, ...otherFields });
       res.status(200).json({ message: "Cập nhật bộ phim thành công" });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ message: 'Lỗi sửa phim', error: error.message });
+      res.status(500).json({ message: "Lỗi sửa phim", error: error.message });
     }
   });
-  
-  
 }
 module.exports = MovieController;
