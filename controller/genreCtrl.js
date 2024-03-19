@@ -72,5 +72,20 @@ class GenreController {
             })
         }
     })
+
+    static updateGenre = asyncHandler(async (req, res) => {
+        const { id } = req.params
+      try {
+        const updateGenre = await Genre.findOneAndUpdate({ _id: id },req.body,{new: true})
+        console.log(updateGenre);
+        return res.status(200).json({
+            message: "Thành công"
+        })
+      } catch (error) {
+        return res.status(403).json({
+            message: "Có lỗi sửa phim"
+        })
+      }
+    })
 }
 module.exports = GenreController;

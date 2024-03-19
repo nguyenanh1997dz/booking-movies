@@ -40,31 +40,30 @@ class RoomController {
             });
         }
     });
+    static getRoomById = asyncHandler(async (req, res) => {
+        const {id} = req.params
+        const room = await Room.findOne({_id: id}).populate("branch", "name")
+        res.send(room);
+    })
 
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
-            const roomId = req.params.id
-            const branch = await Branch.findOne({ rooms: roomId })
-            if (!branch) {
-                return res.status(404).json({ message: "Không tìm thấy chi nhánh chứa phòng này" })
+            const roomId = req.params.id;
+            const updateResult = await Branch.updateMany({}, { $pull: { rooms: roomId } });
+            if (updateResult.nModified === 0) {
+                return res.status(404).json({ message: "Không tìm thấy chi nhánh chứa phòng này" });
             }
-            const index = branch.rooms.indexOf(roomId)
-            if (index !== -1) {
-                branch.rooms.splice(index, 1)
-            }
-
             await Room.findByIdAndDelete(roomId);
-            await branch.save()
-
+    
             return res.status(200).json({
                 message: "Xóa phòng thành công",
-                data: branch
+                data: updateResult
             });
-
+    
         } catch (error) {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình xóa phòng chiếu " + error.message
-            })
+            });
         }
     })
 }

@@ -8,7 +8,6 @@ class InterestController {
     static createInterest = asyncHandler(async (req, res) => {
         try {
             const startTime = req.body.startTime
-
             const movieDuration = await Movie.findById(req.body.movie).select('duration');
             const endTime = startTime + movieDuration.duration * 60000
             console.log(startTime)
@@ -61,26 +60,7 @@ class InterestController {
         }
     })
 
-
     static getInterest = asyncHandler(async (req, res) => {
-        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-
-        try {
-
-            const interests = await Interest.find(query).populate("movie", "name").populate("room", "name");
-
-            return res.status(200).json({
-                message: "Thành công",
-                data: interests
-            });
-        } catch (error) {
-            return res.status(500).json({
-                message: "Có lỗi trong quá trình lấy dữ liệu suất chiếu phim " + error.message
-            });
-        }
-    });
-
-    static getInterestn = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
 

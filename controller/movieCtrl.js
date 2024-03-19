@@ -63,13 +63,13 @@ class MovieController {
       const regex = new RegExp(keyword, "i");
       query = query.where("name").regex(regex);
     }
-
+    const totalCountQuery = query.clone();
+    const totalCount = await totalCountQuery.countDocuments();
     const skip = (page - 1) * limit;
     const movie = await query.skip(skip).limit(limit);
-    const totalCount = await Movie.countDocuments(otherQueryParams);
     const totalPages = Math.ceil(totalCount / limit);
     if (page < 1 || page > totalPages) {
-      return res.status(400).json({ message: "Trang không tồn tại" });
+      return res.status(400).json({ message: "Không có dữ liệu" });
     }
     return res.status(200).json({
       message: "Thành công",
@@ -78,6 +78,7 @@ class MovieController {
       totalPages: totalPages,
     });
   });
+
 
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
