@@ -3,6 +3,7 @@ const UploadImageService = require("../service/uploadImage");
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
+const { request } = require("express");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
@@ -13,11 +14,6 @@ class MovieController {
         genre: JSON.parse(genre),
         cast: JSON.parse(cast),
       });
-      if (movie) {
-        const folder = "movies";
-        const img = await UploadImageService.upLoadImage(req, res, folder);
-        movie.image = img;
-      }
       await movie.save();
       res.status(200).json({
         message: "Tạo phim thành công",
@@ -28,6 +24,22 @@ class MovieController {
       res.status(400).send(error.message);
     }
   });
+  static uploadImgMovie = asyncHandler(async (req, res) => {
+    const img = await UploadImageService.upLoadImage(req, res, "movies");
+    res.json({
+      message: "Thành công",
+      data: img,
+    });
+  })
+  static deleteImageMovie = asyncHandler(async (req, res) => {
+    const {id} = req.params
+    let formatId = "movies/"+id;
+     await UploadImageService.deleteImage(formatId)
+    res.json({
+      message: "Thành công",
+      data: "img",
+    });
+  })
 
   static getAllMovie = asyncHandler(async (req, res) => {
     const {

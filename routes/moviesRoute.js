@@ -6,8 +6,9 @@ const { uploadPhoto, imgResize } = require("../middleware/upLoadImage");
 
 router.get("/", MovieController.getAllMovie)
 router.get("/:id", MovieController.getMovieById)
-router.post("/", uploadPhoto.single("image"), imgResize, MovieController.createMovie)
+router.post("/",  MovieController.createMovie)
 router.put("/:id", uploadPhoto.single("image"), imgResize, MovieController.updateMovie)
 router.delete("/:id", MovieController.deleteMovie)
-
+router.post("/img",uploadPhoto.single("image"), imgResize,  MovieController.uploadImgMovie)
+router.delete("/img/:id",MovieController.deleteImageMovie)
 module.exports = router;
