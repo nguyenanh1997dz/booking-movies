@@ -18,11 +18,7 @@ class CinemaController {
         try {
             const allCinema = await Cinema.find().populate({
                 path: 'branches',
-                select: 'name ',
-                populate: {
-                    path: 'rooms',
-                    select: 'name'
-                }
+
             });
             return res.status(200).json({
                 message: "Thành công",
@@ -51,7 +47,7 @@ class CinemaController {
 
     static updateCinema = asyncHandler(async (req, res) => {
         const { id } = req.params
-        const updateCinema = await Cinema.findOneAndUpdate({ _id: id },req.body,{new: true})
+        const updateCinema = await Cinema.findOneAndUpdate({ _id: id }, req.body, { new: true })
         console.log(updateCinema);
         return res.status(200).json({})
     })
