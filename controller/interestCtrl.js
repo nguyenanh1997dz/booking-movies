@@ -127,7 +127,7 @@ class InterestController {
         }
     });
 
-    static getInterestn = asyncHandler(async (req, res) => {
+    static getAllInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
 
@@ -203,17 +203,68 @@ class InterestController {
         }
     });
 
-    static getInterestp = asyncHandler(async (req, res) => {
+    static getInterest = asyncHandler(async (req, res) => {
 
 
         const movieName = req.params.id;
         console.log(movieName)
+
         try {
 
             const showtimes = await Interest.aggregate([
                 {
-                    $match: { movie: movieName }
+                    $lookup: {
+                        from: 'movies',
+                        localField: 'movie',
+                        foreignField: '_id',
+                        as: 'movie'
+                    }
                 },
+                {
+                    $match: { "movie.name": movieName }
+                },
+                {
+                    $group: {
+                        _id: {
+                            branch: '$branch',
+                            date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
+                            movie: '$movie.name'
+                        },
+                        interests: { $push: '$$ROOT' }
+                    }
+                },
+                {
+                    $group: {
+                        _id: {
+                            branch: '$_id.branch',
+                            date: '$_id.date'
+                        },
+                        movies: {
+                            $push: {
+                                movie: '$_id.movie',
+                                interests: '$interests'
+                            }
+                        }
+                    }
+                },
+                {
+                    $group: {
+                        _id: '$_id.branch',
+                        dates: {
+                            $push: {
+                                date: '$_id.date',
+                                movies: '$movies'
+                            }
+                        }
+                    }
+                },
+                {
+                    $project: {
+                        branch: '$_id',
+                        dates: 1,
+                        _id: 0
+                    }
+                }
             ]);
 
 
