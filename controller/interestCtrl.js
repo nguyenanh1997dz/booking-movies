@@ -63,10 +63,8 @@ class InterestController {
     static getInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
-
         try {
             const interests = await Interest.aggregate([
-
                 {
                     $addFields: {
                         startDate: {
@@ -124,30 +122,18 @@ class InterestController {
         }
     });
 
-
-
-
-
-
-
-
     static updateInterest = asyncHandler(async (req, res) => {
         const { bookedSeats } = req.body;
-        console.log(bookedSeats)
         try {
             const interestId = req.params.id;
             const interest = await Interest.findById(interestId);
-
             if (interest.bookedSeats.includes(bookedSeats)) {
                 return res.status(400).json({
                     message: "Ghế đã được đặt trước đó."
                 });
             }
-
             interest.bookedSeats.push(bookedSeats)
             interest.save()
-
-
             return res.status(200).json({
                 message: "Cập nhật ghế thành công",
                 data: interest

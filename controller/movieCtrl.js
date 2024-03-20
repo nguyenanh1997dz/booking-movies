@@ -1,9 +1,7 @@
 const UploadImageService = require("../service/uploadImage");
-
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
-const { request } = require("express");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
@@ -33,26 +31,35 @@ class MovieController {
   })
   static deleteImageMovie = asyncHandler(async (req, res) => {
     const {id} = req.params
-    let formatId = "movies/"+id;
+    let formatId = `movies/${id}`;
      await UploadImageService.deleteImage(formatId)
     res.json({
       message: "Thành công",
       data: "img",
     });
   })
-
   static getAllMovie = asyncHandler(async (req, res) => {
     const {
       page = 1,
       sort = "-createdAt",
-      limit = 5,
+      limit: limitParam,
       fields,
       genre,
       name,
       ...otherQueryParams
     } = req.query;
+    
+    let limit;
+    if (!limitParam || isNaN(limitParam) || parseInt(limitParam) <= 0) {
+      // Nếu limit không được nhập hoặc không hợp lệ, sử dụng giá trị lớn để lấy tất cả các kết quả
+      limit = 0;
+    } else {
+      limit = parseInt(limitParam);
+    }
+    
     let query = Movie.find(otherQueryParams).populate("genre", "name");
     query = query.sort(sort);
+    
     if (genre) {
       const genreObject = await Genre.findOne({
         name: new RegExp("^" + genre.trim() + "$", "i"),
@@ -65,24 +72,36 @@ class MovieController {
         });
       }
     }
+    
     if (fields) {
       query = query.select(fields.split(","));
     } else {
       query = query.select("-__v");
     }
+    
     if (name) {
       const keyword = name.trim();
       const regex = new RegExp(keyword, "i");
       query = query.where("name").regex(regex);
     }
+    
     const totalCountQuery = query.clone();
     const totalCount = await totalCountQuery.countDocuments();
     const skip = (page - 1) * limit;
-    const movie = await query.skip(skip).limit(limit);
+    
+    if (limit === 0) {
+      query = query.skip(0);
+    } else {
+      query = query.skip(skip).limit(limit);
+    }
+    
+    const movie = await query;
+    
     const totalPages = Math.ceil(totalCount / limit);
     if (page < 1 || page > totalPages) {
       return res.status(400).json({ message: "Không có dữ liệu" });
     }
+    
     return res.status(200).json({
       message: "Thành công",
       movie: movie,
@@ -90,8 +109,6 @@ class MovieController {
       totalPages: totalPages,
     });
   });
-
-
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -111,7 +128,6 @@ class MovieController {
       });
     }
   });
-
   static deleteMovie = asyncHandler(async (req, res) => {
     const movieId = req.params.id;
     try {
@@ -135,24 +151,14 @@ class MovieController {
         });
     }
   });
-
   static updateMovie = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { genre, cast, ...otherFields } = req.body;
-
     try {
       let movie = await Movie.findById(id);
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
-      const updatedFields = {};
-      if (genre) updatedFields.genre = JSON.parse(genre);
-      if (cast) updatedFields.cast = JSON.parse(cast);
-      if (req.file) {
-        updatedFields.image = await UploadImageService.upLoadImage(req, res);
-        await UploadImageService.deleteImage(movie.image?.public_id);
-      }
-      await Movie.findByIdAndUpdate(id, { ...updatedFields, ...otherFields });
+      await Movie.findByIdAndUpdate(id,req.body);
       res.status(200).json({ message: "Cập nhật bộ phim thành công" });
     } catch (error) {
       console.error(error);
