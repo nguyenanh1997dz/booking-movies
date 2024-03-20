@@ -29,6 +29,7 @@ class BranchController {
             })
         }
     })
+
     static getBranchByName = asyncHandler(async (req, res) => {
         const { name } = req.query;
         try {

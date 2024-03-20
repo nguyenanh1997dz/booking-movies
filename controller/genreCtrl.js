@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Genre = require("../model/genreModel")
 const Movie = require("../model/movieModel")
+
 class GenreController {
     static createGenre = asyncHandler(async (req, res) => {
         try {
@@ -50,34 +51,22 @@ class GenreController {
     static deleteGenre = asyncHandler(async (req, res) => {
         try {
             const genreId = req.params.id
-            await Genre.findByIdAndDelete(genreId);
-            await Movie.updateMany(
-                { genre: genreId }, 
-                { $pull: { genre: genreId } }
-            );
+
+
+
+            await Movie.updateMany({ genre: genreId }, { $pull: { genre: genreId } })
+            await Genre.findByIdAndDelete(genreId)
+            // await branch.save()
+
             return res.status(200).json({
                 message: "Xóa thể loại thành công",
             });
+
         } catch (error) {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình xóa thể loại " + error.message
             })
         }
-    })
-
-    static updateGenre = asyncHandler(async (req, res) => {
-        const { id } = req.params
-      try {
-        const updateGenre = await Genre.findOneAndUpdate({ _id: id },req.body,{new: true})
-        console.log(updateGenre);
-        return res.status(200).json({
-            message: "Thành công"
-        })
-      } catch (error) {
-        return res.status(403).json({
-            message: "Có lỗi sửa phim"
-        })
-      }
     })
 }
 module.exports = GenreController;

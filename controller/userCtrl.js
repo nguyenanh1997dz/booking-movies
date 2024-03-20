@@ -49,13 +49,7 @@ class UserController {
         userId: updateuser?._id,
         fullName: updateuser?.fullName,
         email: updateuser?.email,
-        role: updateuser?.role,
-        image: updateuser?.image,
-        isBlocked: updateuser?.isBlocked,
-        address: updateuser?.address,
         accessToken: accessToken,
-        refreshToken:updateuser.refreshToken,
-        bookings: updateuser?.bookings
       });
     } else {
       return res.status(401).json({
@@ -265,22 +259,6 @@ class UserController {
       });
     } catch (error) {
       res.status(500).json({ message: "Có lỗi khi lấy dữ liệu" });
-    }
-  });
-
-  static updateUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    try {
-      const user = await User.findByIdAndUpdate(id, req.body, {new:true});
-      if (!user) {
-        return res.status(404).json({ message: "Người dùng không tồn tại" });
-    }
-      res.status(200).json({
-        message: "Sửa tài khoản thành công",
-        data: user,
-      });
-    } catch (error) {
-      res.status(500).json({ message: "Error fetching users" });
     }
   });
 }

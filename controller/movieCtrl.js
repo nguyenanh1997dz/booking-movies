@@ -1,69 +1,46 @@
-const UploadImageService = require("../service/uploadImage");
+const UploadImageController = require("../service/uploadImage")
+
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
+const { parse } = require("dotenv");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
-    const { genre, cast } = req.body;
+
     try {
+      console.log("req.body:", req.body)
+      const { genre, cast } = req.body
+      console.log("genre:", genre)
+
       const movie = new Movie({
+
         ...req.body,
-        genre: JSON.parse(genre),
-        cast: JSON.parse(cast),
+        genre: genre,
+        cast: cast
       });
+      console.log("movie:", movie)
+      if (movie) {
+        const img = await UploadImageController.upLoadImage(req, res)
+        console.log(img)
+        movie.image = img
+      }
+
+
       await movie.save();
-      res.status(200).json({
-        message: "Tạo phim thành công",
-        data: movie,
-      });
+      res.send('Phim đã được tạo thành công');
     } catch (error) {
       console.error(error);
       res.status(400).send(error.message);
     }
   });
-  static uploadImgMovie = asyncHandler(async (req, res) => {
-    const img = await UploadImageService.upLoadImage(req, res, "movies");
-    res.json({
-      message: "Thành công",
-      data: img,
-    });
-  })
-  static deleteImageMovie = asyncHandler(async (req, res) => {
-    const {id} = req.params
-    let formatId = `movies/${id}`;
-     await UploadImageService.deleteImage(formatId)
-    res.json({
-      message: "Thành công",
-      data: "img",
-    });
-  })
+
   static getAllMovie = asyncHandler(async (req, res) => {
-    const {
-      page = 1,
-      sort = "-createdAt",
-      limit: limitParam,
-      fields,
-      genre,
-      name,
-      ...otherQueryParams
-    } = req.query;
-    
-    let limit;
-    if (!limitParam || isNaN(limitParam) || parseInt(limitParam) <= 0) {
-      // Nếu limit không được nhập hoặc không hợp lệ, sử dụng giá trị lớn để lấy tất cả các kết quả
-      limit = 0;
-    } else {
-      limit = parseInt(limitParam);
-    }
-    
+    const { page = 1, sort = '-createdAt', limit = 5, fields, genre, name, ...otherQueryParams } = req.query;
     let query = Movie.find(otherQueryParams).populate("genre", "name");
     query = query.sort(sort);
-    
     if (genre) {
-      const genreObject = await Genre.findOne({
-        name: new RegExp("^" + genre.trim() + "$", "i"),
-      });
+      const genreObject = await Genre.findOne({ name: new RegExp('^' + genre.trim() + '$', "i") });
       if (genreObject) {
         query = query.where("genre").in([genreObject._id]);
       } else {
@@ -72,43 +49,32 @@ class MovieController {
         });
       }
     }
-    
     if (fields) {
       query = query.select(fields.split(","));
     } else {
       query = query.select("-__v");
     }
-    
     if (name) {
       const keyword = name.trim();
-      const regex = new RegExp(keyword, "i");
-      query = query.where("name").regex(regex);
+      const regex = new RegExp(keyword, 'i');
+      query = query.where('name').regex(regex);
     }
-    
-    const totalCountQuery = query.clone();
-    const totalCount = await totalCountQuery.countDocuments();
+
     const skip = (page - 1) * limit;
-    
-    if (limit === 0) {
-      query = query.skip(0);
-    } else {
-      query = query.skip(skip).limit(limit);
-    }
-    
-    const movie = await query;
-    
+    const movie = await query.skip(skip).limit(limit);
+    const totalCount = await Movie.countDocuments(otherQueryParams);
     const totalPages = Math.ceil(totalCount / limit);
     if (page < 1 || page > totalPages) {
-      return res.status(400).json({ message: "Không có dữ liệu" });
+      return res.status(400).json({ message: "Trang không tồn tại" });
     }
-    
     return res.status(200).json({
       message: "Thành công",
       movie: movie,
       currentPage: page,
-      totalPages: totalPages,
+      totalPages: totalPages
     });
   });
+
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -128,42 +94,24 @@ class MovieController {
       });
     }
   });
+
   static deleteMovie = asyncHandler(async (req, res) => {
     const movieId = req.params.id;
+
     try {
       const foundMovie = await Movie.findById(movieId);
       if (!foundMovie) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Không tìm thấy bộ phim" });
+        return res.status(404).json({ success: false, message: 'Không tìm thấy bộ phim' });
       }
-      const public_id = foundMovie.image.public_id;
-      await UploadImageService.deleteImage(public_id);
-      await Movie.findOneAndDelete({ _id: movieId });
-      res.send("xóa phim thành công");
+      const publicId = foundMovie.images.url
+      const filename = foundMovie.images.filename
+      const xoaanh = await UploadImageController.deleteImage(publicId, filename)
+
+      const deletedMovie = await Movie.findOneAndDelete({ _id: movieId })
+      res.send('xóa phim thành công');
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Lỗi xóa phim",
-          error: error.message,
-        });
+      res.status(500).json({ success: false, message: 'Lỗi xóa phim', error: error.message });
     }
-  });
-  static updateMovie = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    try {
-      let movie = await Movie.findById(id);
-      if (!movie) {
-        return res.status(404).json({ message: "Không tìm thấy bộ phim" });
-      }
-      await Movie.findByIdAndUpdate(id,req.body);
-      res.status(200).json({ message: "Cập nhật bộ phim thành công" });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: "Lỗi sửa phim", error: error.message });
-    }
-  });
+  })
 }
 module.exports = MovieController;

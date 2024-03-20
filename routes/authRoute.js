@@ -7,7 +7,7 @@ router.post("/register",UserController.createUser);
 
 router.post("/login", UserController.login);
 
-router.post("/logout",authMiddleware, UserController.logout);
+router.post("/logout", UserController.logout);
 
 router.post("/refreshToken", UserController.refreshToken);
 
@@ -15,13 +15,11 @@ router.get("/get-all-users",authMiddleware,isAdmin,UserController.getAllUser)
 
 router.get("/get-user-by-id/:id",UserController.getUserById)
 
-router.put("/user/:id",authMiddleware,UserController.updateUser)
-
 router.delete("/delete-user/:id",UserController.deleteUser)
 
 router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 
-router.put("/unblock-user/:id",authMiddleware,isAdmin,UserController.unBlockUser)
+router.put("/unblock-user/:id",UserController.unBlockUser)
 
 router.put("/change-password",authMiddleware,UserController.changePassword)
 

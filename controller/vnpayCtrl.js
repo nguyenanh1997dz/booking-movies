@@ -81,6 +81,7 @@ class VNPAYController {
         });
     }
   });
+  static getPaymentInfo = asyncHandler((req, res) => {})
 }
 
 function sortObject(obj) {
