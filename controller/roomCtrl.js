@@ -3,39 +3,29 @@ const Room = require("../model/roomModel");
 const Branch = require("../model/branchModel"); // Import Branch model
 
 class RoomController {
-    static createRoom = asyncHandler(async (req, res) => {
+    static uploadRoom = asyncHandler(async (req, res) => {
         try {
+            const roomId = req.params.id
+            const room = await Room.findOne({ _id: roomId })
 
-            const newRoom = await Room.create(
-                { name: req.body.room }
-            );
-            branch.rooms.push(newRoom._id);
-            await branch.save();
+            room.push(req.body)
+
+
+
+            await room.save()
 
             return res.status(200).json({
-                message: "Tạo phòng chiếu thành công",
-                data: newRoom
+                message: "Đặt vé thành công",
             });
+
         } catch (error) {
             return res.status(500).json({
-                message: "Có lỗi trong quá trình tạo phòng chiếu " + error.message
+                message: "Có lỗi trong quá trình đặt vé " + error.message
             })
         }
     })
 
-    static getAllRoom = asyncHandler(async (req, res) => {
-        try {
-            const allRoom = await Room.find().populate("branch", "name");
-            return res.status(200).json({
-                message: "Thành công",
-                data: allRoom
-            })
-        } catch (error) {
-            return res.status(500).json({
-                message: "Có lỗi lấy phòng chiếu " + error.message
-            });
-        }
-    });
+
 
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
