@@ -18,7 +18,6 @@ class CinemaController {
         try {
             const allCinema = await Cinema.find().populate({
                 path: 'branches',
-
             });
             return res.status(200).json({
                 message: "Thành công",

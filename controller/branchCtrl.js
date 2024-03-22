@@ -17,8 +17,7 @@ class BranchController {
     })
     static getAllBranch = asyncHandler(async (req, res) => {
         try {
-            const allBranch = await Branch.find().populate('rooms');
-
+            const allBranch = await Branch.find()
             return res.status(200).json({
                 message: "Thành công",
                 data: allBranch
@@ -49,5 +48,25 @@ class BranchController {
             });
         }
     });
+
+    static getBranchByIdCinema = asyncHandler(async (req, res) => {
+        const {id} = req.params
+        try {
+            const branche = await Branch.findOne({cinema: id});
+            if (!branche || branche.length === 0) {
+                return res.status(404).json({
+                    message: "Không tìm thấy chi nhánh rạp"
+                });
+            }
+            return res.status(200).json({
+                message: "Thành công",
+                data: branche
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi tìm chi nhánh rạp " + error.message
+            });
+        }
+    })
 }
 module.exports = BranchController
