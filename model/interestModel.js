@@ -17,9 +17,7 @@ const interestSchema = new mongoose.Schema({
     },
     room: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Branch'
+        ref: 'Room'
     }
-
-
 })
 module.exports = mongoose.model("Interest", interestSchema);

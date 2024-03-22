@@ -3,6 +3,34 @@ const Room = require("../model/roomModel");
 const Branch = require("../model/branchModel"); // Import Branch model
 
 class RoomController {
+    static getRoom = asyncHandler(async (req, res) => {
+        try {
+            const room = await Room.find()
+            return res.status(200).json({
+                message: "Thành công",
+                data: room
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình đặt vé " + error.message
+            })
+        }
+    })
+    static getRoomById = asyncHandler(async (req, res) => {
+        const { id } = req.params;
+        try {
+            const room = await Room.findById(id)
+            return res.status(200).json({
+                message: "Thành công",
+                data: room
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình đặt vé " + error.message
+            })
+        }
+    })
     static uploadRoom = asyncHandler(async (req, res) => {
         try {
             const roomId = req.params.id
@@ -24,9 +52,6 @@ class RoomController {
             })
         }
     })
-
-
-
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
             const roomId = req.params.id

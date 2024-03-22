@@ -2,11 +2,10 @@ const mongoose = require('mongoose')
 
 const roomSchema = new mongoose.Schema({
     name: String,
-
-    interests: [{
+    interests: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Interest'
-    }],
+    },
     bookedSeats: {
         type: Object
     }

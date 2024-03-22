@@ -11,7 +11,6 @@ class InterestController {
     static createInterest = asyncHandler(async (req, res) => {
         try {
             const { room, startTime, ...otherField } = req.body
-
             const newStartTime = new Date(req.body.startTime)
             const movie = await Movie.findById(req.body.movie).select('duration');
 
@@ -20,11 +19,8 @@ class InterestController {
             console.log(newStartTime, endTime)
             const bStartTime = new Date(newStartTime.getTime() - 9 * 60000)
             const aEndTime = new Date(endTime.getTime() + 9 * 60000)
-
-
             const branchId = new mongoose.Types.ObjectId(req.body.branch);
-            console.log(branchId)
-
+ 
             const existingInterest = await Interest.aggregate([
                 {
                     $lookup: {
@@ -62,11 +58,6 @@ class InterestController {
                 }
             ]);
 
-
-
-            console.log(existingInterest)
-
-
             if (existingInterest.length != 0) {
                 return res.status(400).json({
                     message: "Suất chiếu đã tồn tại trong khoảng thời gian này."
@@ -96,7 +87,6 @@ class InterestController {
                 { new: true }
             );
 
-
             return res.status(200).json({
                 message: "Tạo suất chiếu phim thành công",
                 data: newInterest
@@ -108,10 +98,8 @@ class InterestController {
         }
     })
 
-
     static getInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-
         try {
 
             const interests = await Interest.find().populate("movie", "name").populate("room", "name");
@@ -326,5 +314,24 @@ class InterestController {
         }
     });
 
+    static getInterestById = asyncHandler(async (req, res) => {
+        const {id}  = req.params
+        try {
+            const interest = await Interest.findOne({_id: id}).populate("movie","name").populate("room","name")
+            if (!interest) {
+                return res.status(404).json({
+                    message: "Không tìm thấy lịch chiếu"
+                })
+            }
+            return res.status(404).json({
+                message: "Thành công",
+                data: interest
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình lấy suất chiếu phim " + error.message
+            });
+        }
+    })
 }
 module.exports = InterestController;
