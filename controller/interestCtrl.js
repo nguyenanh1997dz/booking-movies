@@ -149,9 +149,24 @@ class InterestController {
                         _id: {
                             branch: '$branch',
                             date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
-                            movie: '$movie.name'
+                            movie: '$movie.name',
+                            description: '$movie.description',
+                            genre: '$movie.genre',
+                            cast: '$movie.cast',
+                            director: '$movie.director',
+                            trailer: '$movie.trailer',
+                            duration: '$movie.duration',
+                            image: '$movie.image',
                         },
-                        interests: { $push: '$$ROOT' }
+                        interests: {
+                            $push: {
+                                _id: '$_id',
+                                branch: '$branch',
+                                startTime: '$startTime',
+                                endTime: '$endTime',
+                                room: '$room'
+                            }
+                        }
                     }
                 },
                 {
@@ -162,7 +177,14 @@ class InterestController {
                         },
                         movies: {
                             $push: {
-                                movie: '$_id.movie',
+                                name: '$_id.movie',
+                                description: '$_id.description',
+                                genre: '$_id.genre',
+                                cast: '$_id.cast',
+                                director: '$_id.director',
+                                trailer: '$_id.trailer',
+                                duration: '$_id.duration',
+                                image: '$_id.image',
                                 interests: '$interests'
                             }
                         }
@@ -187,6 +209,8 @@ class InterestController {
                     }
                 }
             ]);
+
+
 
 
 
@@ -228,7 +252,8 @@ class InterestController {
                         _id: {
                             branch: '$branch',
                             date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
-                            movie: '$movie.name'
+                            movie: '$movie.name',
+                            movie: '$movie.name',
                         },
                         interests: { $push: '$$ROOT' }
                     }
