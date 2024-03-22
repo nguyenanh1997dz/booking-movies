@@ -229,13 +229,8 @@ class InterestController {
     });
 
     static getInterest = asyncHandler(async (req, res) => {
-
-
         const movieName = req.params.id;
-        console.log(movieName)
-
         try {
-
             const showtimes = await Interest.aggregate([
                 {
                     $lookup: {
@@ -292,24 +287,16 @@ class InterestController {
                     }
                 }
             ]);
-
-
             return res.status(200).json({
                 message: "Thành công",
                 data: showtimes
             });
         } catch (error) {
-            // Xử lý lỗi nếu có
             return res.status(500).json({
                 message: "Có lỗi trong quá trình lấy dữ liệu suất chiếu phim " + error.message
             });
         }
     });
-
-
-
-
-
 
     static updateInterest = asyncHandler(async (req, res) => {
         const { bookedSeats } = req.body;
