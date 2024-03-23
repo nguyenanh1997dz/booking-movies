@@ -131,20 +131,13 @@ class MovieController {
 
   static updateMovie = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { genre, cast, ...otherFields } = req.body;
     try {
       let movie = await Movie.findById(id);
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
-      const updatedFields = {};
-      if (genre) updatedFields.genre = JSON.parse(genre);
-      if (cast) updatedFields.cast = JSON.parse(cast);
-      if (req.file) {
-        updatedFields.image = await UploadImageService.upLoadImage(req, res);
-        await UploadImageService.deleteImage(movie.image?.public_id);
-      }
-      await Movie.findByIdAndUpdate(id, { ...updatedFields, ...otherFields });
+      await Movie.findByIdAndUpdate({_id : id}, req.body ,{new: true});
+      console.log(Movie);
       res.status(200).json({ message: "Cập nhật bộ phim thành công" });
     } catch (error) {
       console.error(error);
