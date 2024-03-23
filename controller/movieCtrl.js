@@ -121,8 +121,6 @@ class MovieController {
           .status(404)
           .json({ success: false, message: "Không tìm thấy bộ phim" });
       }
-      const public_id = foundMovie.image.public_id;
-      await UploadImageService.deleteImage(public_id);
       await Movie.findOneAndDelete({ _id: movieId });
       res.send("xóa phim thành công");
     } catch (error) {

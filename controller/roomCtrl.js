@@ -35,17 +35,11 @@ class RoomController {
         try {
             const roomId = req.params.id
             const room = await Room.findOne({ _id: roomId })
-
             room.push(req.body)
-
-
-
             await room.save()
-
             return res.status(200).json({
                 message: "Đặt vé thành công",
             });
-
         } catch (error) {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình đặt vé " + error.message

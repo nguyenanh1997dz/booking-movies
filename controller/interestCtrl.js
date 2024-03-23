@@ -79,8 +79,6 @@ class InterestController {
             const newInterest = await Interest.create(data);
 
 
-
-
             await Branch.findOneAndUpdate(
                 { _id: req.body.branch },
                 { $push: { interests: newInterest._id } },
