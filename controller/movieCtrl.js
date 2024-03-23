@@ -7,14 +7,8 @@ const { request } = require("express");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
-    const { genre, cast } = req.body;
     try {
-      const movie = new Movie({
-        ...req.body,
-        genre: JSON.parse(genre),
-        cast: JSON.parse(cast),
-      });
-      await movie.save();
+      const movie = Movie.create(req.body)
       res.status(200).json({
         message: "Tạo phim thành công",
         data: movie,
@@ -24,6 +18,7 @@ class MovieController {
       res.status(400).send(error.message);
     }
   });
+
   static uploadImgMovie = asyncHandler(async (req, res) => {
     const img = await UploadImageService.upLoadImage(req, res, "movies");
     res.json({
@@ -31,6 +26,7 @@ class MovieController {
       data: img,
     });
   })
+
   static deleteImageMovie = asyncHandler(async (req, res) => {
     const { id } = req.params
     let formatId = "movies/" + id;
@@ -91,7 +87,6 @@ class MovieController {
     });
   });
 
-
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -137,7 +132,6 @@ class MovieController {
   static updateMovie = asyncHandler(async (req, res) => {
     const { id } = req.params;
     const { genre, cast, ...otherFields } = req.body;
-
     try {
       let movie = await Movie.findById(id);
       if (!movie) {
