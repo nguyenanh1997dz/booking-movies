@@ -130,9 +130,10 @@ class InterestController {
     static getAllInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
-
+        const { branchId } = req.query;
+        console.log(branchId);
         try {
-            const interests = await Interest.aggregate([
+            let aggregationPipeline = [
                 {
                     $lookup: {
                         from: 'movies',
@@ -208,14 +209,14 @@ class InterestController {
                         _id: 0
                     }
                 }
-            ]);
-
-
-
-
-
-
-
+            ];
+    
+            if (branchId) {
+                aggregationPipeline.unshift({ $match: { branch: new mongoose.Types.ObjectId(branchId) } });
+            }
+    
+            const interests = await Interest.aggregate(aggregationPipeline);
+    
             return res.status(200).json({
                 message: "Thành công",
                 data: interests
