@@ -211,7 +211,7 @@ class InterestController {
             ];
 
             if (branchId) {
-                aggregationPipeline.unshift({ $match: { branch: new mongoose.Types.ObjectId(branchId) } });
+                aggregationPipeline.push({ $match: { branch: new mongoose.Types.ObjectId(branchId) } });
             }
 
 
