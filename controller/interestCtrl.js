@@ -59,7 +59,7 @@ class InterestController {
 
 
             const newInterest = await Interest.create(data);
-
+            await Room.findByIdAndUpdate(roomId, { $push: { interests: newInterest._id } }, { new: true });
 
             return res.status(200).json({
                 message: "Tạo suất chiếu phim thành công",
@@ -72,9 +72,16 @@ class InterestController {
         }
     })
     static getAllInterest = asyncHandler(async (req, res) => {
-        // const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         try {
-            const interests = await Interest.find()
+            const { roomId } = req.query;
+            let interests;
+
+            if (roomId) {
+                interests = await Interest.find({ room: roomId }).populate("movie");
+            } else {
+                interests = await Interest.find().populate("movie");
+            }
+
             return res.status(200).json({
                 message: "Thành công",
                 data: interests
@@ -104,6 +111,7 @@ class InterestController {
             });
         }
     })
+
     static getAllBranchInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
@@ -216,6 +224,7 @@ class InterestController {
 
 
             const interests = await Interest.aggregate(aggregationPipeline);
+            console.log(interests)
 
             return res.status(200).json({
                 message: "Thành công",
