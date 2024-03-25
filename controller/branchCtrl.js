@@ -17,7 +17,7 @@ class BranchController {
     })
     static getAllBranch = asyncHandler(async (req, res) => {
         try {
-            const allBranch = await Branch.find()
+            const allBranch = await Branch.find().populate("rooms")
             return res.status(200).json({
                 message: "Thành công",
                 data: allBranch
