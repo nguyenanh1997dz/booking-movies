@@ -4,13 +4,10 @@ const InterestController = require("../controller/interestCtrl");
 const router = express.Router();
 
 router.get("/", InterestController.getAllInterest)
-
-router.get("/:id", InterestController.getInterest)
-
-router.get("/detail/:id", InterestController.getInterestById);
-
+router.get("/detail/:id", InterestController.getInterest)
+router.get("/branch", InterestController.getAllBranchInterest);
+router.get("/movie/:id", InterestController.getMovieInterest);
 router.post("/", InterestController.createInterest)
-
 router.put("/:id", InterestController.updateInterest)
 
 module.exports = router;

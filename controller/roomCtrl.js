@@ -3,6 +3,29 @@ const Room = require("../model/roomModel");
 const Branch = require("../model/branchModel"); // Import Branch model
 
 class RoomController {
+    static createRoom = asyncHandler(async (req, res) => {
+        try {
+            const { branch, name } = req.body;
+            const existingRoom = await Room.findOne({ branch: branch, name });
+
+            if (existingRoom) {
+                return res.status(400).json({
+                    message: "Phòng đã tồn tại trong chi nhánh này"
+                });
+            }
+            const newRoom = await Room.create(req.body);
+            await Branch.findByIdAndUpdate(branch, { $push: { rooms: newRoom._id } });
+
+            return res.status(200).json({
+                message: "Tạo phòng thành công",
+                data: newRoom
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình tạo phòng " + error.message
+            });
+        }
+    });
     static getRoom = asyncHandler(async (req, res) => {
         try {
             const room = await Room.find()
@@ -31,47 +54,24 @@ class RoomController {
             })
         }
     })
-    static uploadRoom = asyncHandler(async (req, res) => {
-        try {
-            const roomId = req.params.id
-            const room = await Room.findOne({ _id: roomId })
-            room.push(req.body)
-            await room.save()
-            return res.status(200).json({
-                message: "Đặt vé thành công",
-            });
-        } catch (error) {
-            return res.status(500).json({
-                message: "Có lỗi trong quá trình đặt vé " + error.message
-            })
-        }
-    })
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
-            const roomId = req.params.id
-            const branch = await Branch.findOne({ rooms: roomId })
-            if (!branch) {
-                return res.status(404).json({ message: "Không tìm thấy chi nhánh chứa phòng này" })
+            const roomId = req.params.id;
+            const branch = await Branch.findOne({ rooms: roomId });
+            if (branch) {
+                await Branch.findByIdAndUpdate(branch._id, { $pull: { rooms: roomId } });
             }
-            const index = branch.rooms.indexOf(roomId)
-            if (index !== -1) {
-                branch.rooms.splice(index, 1)
-            }
-
             await Room.findByIdAndDelete(roomId);
-            await branch.save()
-
             return res.status(200).json({
                 message: "Xóa phòng thành công",
-                data: branch
             });
-
         } catch (error) {
             return res.status(500).json({
-                message: "Có lỗi trong quá trình xóa phòng chiếu " + error.message
-            })
+                message: "Có lỗi trong quá trình xóa phòng: " + error.message
+            });
         }
     })
+
 }
 
 module.exports = RoomController;

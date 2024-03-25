@@ -15,9 +15,9 @@ const branchSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Cinema'
     },
-    interests: [{
+    rooms: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'Interest'
+        ref: 'Room'
     }]
 
 

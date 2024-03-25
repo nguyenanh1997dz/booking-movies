@@ -10,27 +10,15 @@ const { ObjectId } = require("mongodb");
 class InterestController {
     static createInterest = asyncHandler(async (req, res) => {
         try {
-            const { room, startTime, ...otherField } = req.body
+            const { roomId, startTime, ...otherField } = req.body
             const newStartTime = new Date(req.body.startTime)
             const movie = await Movie.findById(req.body.movie).select('duration');
-
             const movieDuration = movie.duration * 60000;
             const endTime = new Date(newStartTime.getTime() + movieDuration);
             console.log(newStartTime, endTime)
             const bStartTime = new Date(newStartTime.getTime() - 9 * 60000)
             const aEndTime = new Date(endTime.getTime() + 9 * 60000)
-            const branchId = new mongoose.Types.ObjectId(req.body.branch);
- 
             const existingInterest = await Interest.aggregate([
-                {
-                    $lookup: {
-                        from: "rooms",
-                        localField: "room",
-                        foreignField: "_id",
-                        as: "room"
-                    }
-                },
-
                 {
                     $match: {
                         $and: [
@@ -50,14 +38,12 @@ class InterestController {
                                     }
                                 ]
                             },
-                            { "room.name": room },
-                            { branch: branchId }
-
+                            { room: new mongoose.Types.ObjectId(roomId) }
                         ]
                     }
                 }
             ]);
-
+            console.log(existingInterest)
             if (existingInterest.length != 0) {
                 return res.status(400).json({
                     message: "Suất chiếu đã tồn tại trong khoảng thời gian này."
@@ -67,23 +53,13 @@ class InterestController {
             const data = {
                 ...otherField,
                 startTime: newStartTime,
-                endTime: endTime
+                endTime: endTime,
+                room: roomId
             }
-            if (data) {
-                const newRoom = await Room.create(
-                    { name: room }
-                )
-                data.room = newRoom
-            }
+
 
             const newInterest = await Interest.create(data);
 
-
-            await Branch.findOneAndUpdate(
-                { _id: req.body.branch },
-                { $push: { interests: newInterest._id } },
-                { new: true }
-            );
 
             return res.status(200).json({
                 message: "Tạo suất chiếu phim thành công",
@@ -95,13 +71,10 @@ class InterestController {
             });
         }
     })
-
-    static getInterest = asyncHandler(async (req, res) => {
-        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
+    static getAllInterest = asyncHandler(async (req, res) => {
+        // const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         try {
-
-            const interests = await Interest.find().populate("movie", "name").populate("room", "name");
-
+            const interests = await Interest.find()
             return res.status(200).json({
                 message: "Thành công",
                 data: interests
@@ -112,8 +85,26 @@ class InterestController {
             });
         }
     });
-
-    static getAllInterest = asyncHandler(async (req, res) => {
+    static getInterest = asyncHandler(async (req, res) => {
+        const { id } = req.params
+        try {
+            const interest = await Interest.findOne({ _id: id }).populate("movie", "name").populate("room", "name")
+            if (!interest) {
+                return res.status(404).json({
+                    message: "Không tìm thấy lịch chiếu"
+                })
+            }
+            return res.status(404).json({
+                message: "Thành công",
+                data: interest
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình lấy suất chiếu phim " + error.message
+            });
+        }
+    })
+    static getAllBranchInterest = asyncHandler(async (req, res) => {
         const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
         const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
         const { branchId } = req.query;
@@ -129,12 +120,34 @@ class InterestController {
                     }
                 },
                 {
+                    $lookup: {
+                        from: 'rooms',
+                        localField: 'room',
+                        foreignField: '_id',
+                        as: 'room'
+                    }
+                },
+                {
+                    $unwind: '$room'
+                },
+                {
                     $unwind: '$movie'
+                },
+                {
+                    $lookup: {
+                        from: 'branches',
+                        localField: 'room.branch',
+                        foreignField: '_id',
+                        as: 'branch'
+                    }
+                },
+                {
+                    $unwind: '$branch'
                 },
                 {
                     $group: {
                         _id: {
-                            branch: '$branch',
+                            branch: '$room.branch',
                             date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
                             movie: '$movie.name',
                             description: '$movie.description',
@@ -148,7 +161,7 @@ class InterestController {
                         interests: {
                             $push: {
                                 _id: '$_id',
-                                branch: '$branch',
+                                branch: '$room.branch',
                                 startTime: '$startTime',
                                 endTime: '$endTime',
                                 room: '$room'
@@ -196,13 +209,14 @@ class InterestController {
                     }
                 }
             ];
-    
+
             if (branchId) {
                 aggregationPipeline.unshift({ $match: { branch: new mongoose.Types.ObjectId(branchId) } });
             }
-    
+
+
             const interests = await Interest.aggregate(aggregationPipeline);
-    
+
             return res.status(200).json({
                 message: "Thành công",
                 data: interests
@@ -214,8 +228,8 @@ class InterestController {
         }
     });
 
-    static getInterest = asyncHandler(async (req, res) => {
-        const movieName = req.params.id;
+    static getMovieInterest = asyncHandler(async (req, res) => {
+        const movie = req.params.id;
         try {
             const showtimes = await Interest.aggregate([
                 {
@@ -227,17 +241,54 @@ class InterestController {
                     }
                 },
                 {
-                    $match: { "movie.name": movieName }
+                    $lookup: {
+                        from: 'rooms',
+                        localField: 'room',
+                        foreignField: '_id',
+                        as: 'room'
+                    }
+                },
+                {
+                    $unwind: '$room',
+                    $unwind: '$movie'
+                },
+                {
+                    $lookup: {
+                        from: 'branches',
+                        localField: 'room.branch',
+                        foreignField: '_id',
+                        as: 'branch'
+                    }
+                },
+                {
+                    $unwind: '$branch'
+                },
+                {
+                    $match: { "movie._id": new mongoose.Types.ObjectId(movie) }
                 },
                 {
                     $group: {
                         _id: {
-                            branch: '$branch',
+                            branch: '$room.branch',
                             date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
                             movie: '$movie.name',
-                            movie: '$movie.name',
+                            description: '$movie.description',
+                            genre: '$movie.genre',
+                            cast: '$movie.cast',
+                            director: '$movie.director',
+                            trailer: '$movie.trailer',
+                            duration: '$movie.duration',
+                            image: '$movie.image',
                         },
-                        interests: { $push: '$$ROOT' }
+                        interests: {
+                            $push: {
+                                _id: '$_id',
+                                branch: '$room.branch',
+                                startTime: '$startTime',
+                                endTime: '$endTime',
+                                room: '$room'
+                            }
+                        }
                     }
                 },
                 {
@@ -248,7 +299,14 @@ class InterestController {
                         },
                         movies: {
                             $push: {
-                                movie: '$_id.movie',
+                                name: '$_id.movie',
+                                description: '$_id.description',
+                                genre: '$_id.genre',
+                                cast: '$_id.cast',
+                                director: '$_id.director',
+                                trailer: '$_id.trailer',
+                                duration: '$_id.duration',
+                                image: '$_id.image',
                                 interests: '$interests'
                             }
                         }
@@ -283,7 +341,6 @@ class InterestController {
             });
         }
     });
-
     static updateInterest = asyncHandler(async (req, res) => {
         const { bookedSeats } = req.body;
         console.log(bookedSeats)
@@ -312,24 +369,5 @@ class InterestController {
         }
     });
 
-    static getInterestById = asyncHandler(async (req, res) => {
-        const {id}  = req.params
-        try {
-            const interest = await Interest.findOne({_id: id}).populate("movie","name").populate("room","name")
-            if (!interest) {
-                return res.status(404).json({
-                    message: "Không tìm thấy lịch chiếu"
-                })
-            }
-            return res.status(404).json({
-                message: "Thành công",
-                data: interest
-            })
-        } catch (error) {
-            return res.status(500).json({
-                message: "Có lỗi trong quá trình lấy suất chiếu phim " + error.message
-            });
-        }
-    })
 }
 module.exports = InterestController;
