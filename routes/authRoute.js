@@ -17,6 +17,8 @@ router.get("/get-user-by-id/:id",UserController.getUserById)
 
 router.delete("/delete-user/:id",UserController.deleteUser)
 
+router.put("/update-user/:id",UserController.updateUser)
+
 router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 
 router.put("/unblock-user/:id",UserController.unBlockUser)

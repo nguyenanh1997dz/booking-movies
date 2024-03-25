@@ -22,6 +22,7 @@ class UserController {
   static login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
+    if (findUser && findUser.isBlocked == true) res.status(403).json({ message: "Tài khoản đã bị khóa"});
     if (findUser && (await findUser.isPasswordMatched(password))) {
       const refreshToken = jwt.sign(
         { userId: findUser._id },
@@ -259,6 +260,23 @@ class UserController {
       });
     } catch (error) {
       res.status(500).json({ message: "Có lỗi khi lấy dữ liệu" });
+    }
+  });
+  static updateUser = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    try {
+      const user = await User.findOne({_id: id});
+      if (!user) {
+        return res.status(404).json({
+          message: "Không tìm thấy tài khoản",
+        });
+      }
+      await User.findByIdAndUpdate(id, req.body, { new: true });
+      res.status(200).json({
+        message: "Cập nhật thành công",
+      });
+    } catch (error) {
+      res.status(500).json({ message: "Có lỗi khi cập nhật dữ liệu" });
     }
   });
 }

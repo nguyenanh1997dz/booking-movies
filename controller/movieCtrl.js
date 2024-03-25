@@ -137,7 +137,6 @@ class MovieController {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
       await Movie.findByIdAndUpdate({_id : id}, req.body ,{new: true});
-      console.log(Movie);
       res.status(200).json({ message: "Cập nhật bộ phim thành công" });
     } catch (error) {
       console.error(error);
