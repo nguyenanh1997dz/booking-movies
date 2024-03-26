@@ -8,6 +8,7 @@ router.get("/detail/:id", InterestController.getInterest)
 router.get("/branch", InterestController.getAllBranchInterest);
 router.get("/movie/:id", InterestController.getMovieInterest);
 router.post("/", InterestController.createInterest)
+router.put("/updateStatus", InterestController.updateStatusInterest)
 router.put("/:id", InterestController.updateInterest)
 
 module.exports = router;

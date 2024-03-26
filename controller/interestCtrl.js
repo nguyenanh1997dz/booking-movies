@@ -4,9 +4,7 @@ const Movie = require("../model/movieModel")
 const Branch = require("../model/branchModel")
 const Room = require("../model/roomModel")
 const mongoose = require('mongoose');
-
 const { ObjectId } = require("mongodb");
-
 class InterestController {
     static createInterest = asyncHandler(async (req, res) => {
         try {
@@ -374,6 +372,41 @@ class InterestController {
         } catch (error) {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình cập nhật ghế " + error.message
+            });
+        }
+    });
+    static updateStatusInterest = asyncHandler(async (req, res) => {
+        try {
+            const interests = await Interest.find();
+            const currentTime = new Date();
+            const vietnamTime = new Date(currentTime.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" }));
+
+            for (let interest of interests) {
+                if (vietnamTime >= interest.startTime && vietnamTime <= interest.endTime) {
+                    interest.status = 'Đang diễn ra';
+                    console.log("giờ hiện tại", vietnamTime.toISOString());
+                    console.log("giờ phim chiếu", interest.startTime.toISOString());
+                    console.log(interest.status)
+                } else if (vietnamTime > interest.endTime) {
+                    interest.status = 'Đã kết thúc';
+                    console.log("giờ hiện tại", vietnamTime.toISOString());
+                    console.log("giờ phim chiếu", interest.startTime.toISOString());
+                    console.log(interest.status)
+                } else {
+                    interest.status = 'Chưa bắt đầu';
+                    console.log("giờ hiện tại", vietnamTime.toISOString());
+                    console.log("giờ phim chiếu", interest.startTime.toISOString());
+                    console.log(interest.status)
+                }
+                await interest.save();
+
+            }
+            return res.status(200).json({
+                message: "Cập nhật trạng thái suất chiếu thành công"
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình cập nhật trạng thái suất chiếu: " + error.message
             });
         }
     });
