@@ -19,6 +19,11 @@ const interestSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room'
     },
+    status: {
+        type: String,
+        enum: ['Chưa bắt đầu', 'Đang diễn ra', 'Đã kết thúc'],
+        default: 'Chưa bắt đầu'
+    }
 
 })
 module.exports = mongoose.model("Interest", interestSchema);
