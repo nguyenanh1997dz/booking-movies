@@ -92,7 +92,6 @@ class MovieController {
     });
   });
 
-
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {

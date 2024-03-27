@@ -73,7 +73,6 @@ class InterestController {
         try {
             const { roomId } = req.query;
             let interests;
-
             if (roomId) {
                 interests = await Interest.find({ room: roomId }).populate("movie");
             } else {

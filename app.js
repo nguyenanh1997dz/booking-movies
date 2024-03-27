@@ -1,25 +1,15 @@
 const express = require('express');
+const app = express();
+
 const morgan = require("morgan");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const { pageNotFound, errorHandler } = require('./middleware/errorHandler');
+const indexRoute = require('./routes/indexRoute')
 const dotenv = require("dotenv").config();
 const compression = require('compression');
-const axios = require('axios');
-const app = express();
 const bodyParser = require('body-parser');
 
-// import routes
-const authRoute = require('./routes/authRoute')
-const movieRoute = require('./routes/moviesRoute')
-const genreRoute = require('./routes/genreRoute')
-const cinemaRoute = require('./routes/cinemaRoute')
-const branchRoute = require('./routes/branchRoute')
-const roomRoute = require('./routes/roomRoute')
-const interestRoute = require('./routes/interestRoute')
-const bookRoute = require('./routes/bookRoute')
-
-const vnpayRoute = require('./routes/vnpayRoute')
 //database
 require('./config/db')
 // server configuration
@@ -41,17 +31,9 @@ app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-// routes
 
-app.use("/api/v1/auth", authRoute);
-app.use("/api/v1/movie", movieRoute);
-app.use("/api/v1/genre", genreRoute);
-app.use("/api/v1/cinema", cinemaRoute);
-app.use("/api/v1/branch", branchRoute);
-app.use("/api/v1/room", roomRoute);
-app.use("/api/v1/interest", interestRoute);
-app.use("/api/v1/book", bookRoute);
-app.use("/api/v1/vnpay", vnpayRoute);
+// routes
+app.use(indexRoute)
 
 // dùng để ngăn render tự sleep
 app.get("/ping", (req, res) => {
