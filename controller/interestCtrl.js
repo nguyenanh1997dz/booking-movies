@@ -94,6 +94,7 @@ class InterestController {
         const { id } = req.params
         try {
             const interest = await Interest.findOne({ _id: id }).populate("movie", "name").populate("room", "name")
+            console.log(interest.bookedSeats);
             if (!interest) {
                 return res.status(404).json({
                     message: "Không tìm thấy lịch chiếu"

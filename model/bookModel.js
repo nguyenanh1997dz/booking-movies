@@ -13,13 +13,27 @@ const bookSchema = new mongoose.Schema({
     ref: 'Interest'
   },
   seats: {
-    type: Object
+    type: [String]
   },
   price: {
     type: Number
-  }
+  },
+  status: {
+    type: String,
+    enum: ['Chưa thanh toán', 'Đã thanh toán'],
+    default: 'Chưa thanh toán'
+},
 });
-
+bookSchema.pre(/^find/, function(next) {
+  this.populate({
+    path: 'interest',
+    populate: {
+        path: 'movie',
+        select: 'name'
+    }
+}).populate('branch', 'name').populate('user', 'fullName');
+  next();
+});
 module.exports = mongoose.model('Book', bookSchema);
 
 

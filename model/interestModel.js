@@ -12,7 +12,7 @@ const interestSchema = new mongoose.Schema({
         type: Date
     },
     bookedSeats: {
-        type: Object,
+        type: [String],
         default: []
     },
     room: {
@@ -24,6 +24,5 @@ const interestSchema = new mongoose.Schema({
         enum: ['Chưa bắt đầu', 'Đang diễn ra', 'Đã kết thúc'],
         default: 'Chưa bắt đầu'
     }
-
 })
 module.exports = mongoose.model("Interest", interestSchema);

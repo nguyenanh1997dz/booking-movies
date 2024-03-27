@@ -37,15 +37,11 @@ app.use(cors({
 }));
 app.use(morgan("dev"));
 app.use(compression());
-// routes
-
-// dùng để ngăn render tự sleep
-
 app.use(bodyParser.urlencoded({
     extended: true
 }));
 app.use(bodyParser.json());
-
+// routes
 
 app.use("/api/v1/auth", authRoute);
 app.use("/api/v1/movie", movieRoute);
@@ -56,7 +52,8 @@ app.use("/api/v1/room", roomRoute);
 app.use("/api/v1/interest", interestRoute);
 app.use("/api/v1/book", bookRoute);
 app.use("/api/v1/vnpay", vnpayRoute);
-// ping server when render sleep
+
+// dùng để ngăn render tự sleep
 app.get("/ping", (req, res) => {
     return res.json({
         message: "Ping server"
