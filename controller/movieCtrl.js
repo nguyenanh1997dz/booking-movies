@@ -38,15 +38,16 @@ class MovieController {
   })
 
   static getAllMovie = asyncHandler(async (req, res) => {
-    const {
+    let {
       page = 1,
       sort = "-createdAt",
-      limit = 5,
+      limit = 0,
       fields,
       genre,
       name,
       ...otherQueryParams
     } = req.query;
+    page = parseInt(page);
     let query = Movie.find(otherQueryParams).populate("genre", "name");
     query = query.sort(sort);
     if (genre) {
@@ -75,7 +76,10 @@ class MovieController {
     const totalCount = await totalCountQuery.countDocuments();
     const skip = (page - 1) * limit;
     const movie = await query.skip(skip).limit(limit);
-    const totalPages = Math.ceil(totalCount / limit);
+    let totalPages = Math.ceil(totalCount / limit);
+    if (limit === 0) {
+      totalPages = 1;
+    }
     if (page < 1 || page > totalPages) {
       return res.status(400).json({ message: "Không có dữ liệu" });
     }
@@ -83,9 +87,11 @@ class MovieController {
       message: "Thành công",
       movie: movie,
       currentPage: page,
-      totalPages: totalPages,
+      totalPages,
+      totalCount
     });
   });
+
 
   static getMovieById = asyncHandler(async (req, res) => {
     const { id } = req.params;
