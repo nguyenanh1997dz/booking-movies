@@ -34,18 +34,27 @@ class BookController {
         }
     });
     static getAllBook = asyncHandler(async (req, res) => {
+        const { user, sort = '-createdAt' } = req.query;
+        const validQueryFields = ["user", "branch", "interest","room"];
         try {
-            const books = await Book.find().populate("user", "fullName").populate("interest", "name")
+            const query = {};
+            validQueryFields.forEach(field => {
+                if (req.query[field]) {
+                    query[field] = req.query[field];
+                }
+            });
+            const books = await Book.find(query).sort(sort);
             return res.status(200).json({
                 message: "Thành công",
                 data: books
-            })
+            });
         } catch (error) {
             return res.status(500).json({
                 message: "Có lỗi trong quá trình lấy dữ liệu đặt vé " + error.message
-            })
+            });
         }
-    })
+    });
+    
     static getBookById = asyncHandler(async (req, res) => {
         const {id} = req.params
         try {

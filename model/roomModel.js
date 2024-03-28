@@ -12,6 +12,8 @@ const roomSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch'
     }
-});
+},
+{timestamps:true}
+);
 
 module.exports = mongoose.model('Room', roomSchema);
