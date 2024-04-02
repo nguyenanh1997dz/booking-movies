@@ -50,7 +50,7 @@ class BranchController {
     static getBranchByIdCinema = asyncHandler(async (req, res) => {
         const { id } = req.params
         try {
-            const branche = await Branch.find({ cinema: id }).populate("interests");
+            const branche = await Branch.find({ cinema: id }).populate("rooms");
             if (!branche || branche.length === 0) {
                 return res.status(404).json({
                     message: "Không tìm thấy chi nhánh rạp"
