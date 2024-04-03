@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Room = require("../model/roomModel");
 const Branch = require("../model/branchModel"); // Import Branch model
+const Interest = require("../model/interestModel")
 
 class RoomController {
     static createRoom = asyncHandler(async (req, res) => {
@@ -40,10 +41,46 @@ class RoomController {
             })
         }
     })
+    static updateRoom = asyncHandler(async (req, res) => {
+        try {
+
+            const rooms = await Room.find().populate("interests");
+
+            rooms.map(room => {
+                room.interests.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+                for (let i = 0; i < room.interests.length - 1; i++) {
+                    const currentInterest = room.interests[i];
+                    const nextInterest = room.interests[i + 1];
+                    const freeTime = {
+                        startTime: currentInterest.endTime,
+                        endTime: nextInterest.startTime
+                    };
+                    console.log(freeTime)
+                    if (freeTime.endTime > freeTime.startTime) {
+                        room.freeTimes.push(freeTime);
+                        room.save
+                    }
+                }
+
+            });
+            return res.status(200).json({
+                message: "thành công ",
+                data: rooms
+            })
+
+
+
+
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi trong quá trình tạo phòng " + error.message
+            });
+        }
+    })
     static getRoomById = asyncHandler(async (req, res) => {
         const { id } = req.params;
         try {
-            const room = await Room.findById(id)
+            const room = await Room.findById(id).populate("interest")
             return res.status(200).json({
                 message: "Thành công",
                 data: room
@@ -54,6 +91,7 @@ class RoomController {
             })
         }
     })
+
     static deleteRoom = asyncHandler(async (req, res) => {
         try {
             const roomId = req.params.id;

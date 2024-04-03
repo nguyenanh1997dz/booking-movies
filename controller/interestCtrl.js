@@ -73,6 +73,7 @@ class InterestController {
         try {
             const { roomId } = req.query;
             let interests;
+
             if (roomId) {
                 interests = await Interest.find({ room: roomId }).populate("movie");
             } else {
@@ -92,8 +93,7 @@ class InterestController {
     static getInterest = asyncHandler(async (req, res) => {
         const { id } = req.params
         try {
-            const interest = await Interest.findOne({ _id: id }).populate("movie", "name").populate("room", "name")
-            console.log(interest.bookedSeats);
+            const interest = await Interest.findOne({ _id: id }).populate("movie", "name").populate("room",)
             if (!interest) {
                 return res.status(404).json({
                     message: "Không tìm thấy lịch chiếu"
@@ -111,8 +111,7 @@ class InterestController {
     })
 
     static getAllBranchInterest = asyncHandler(async (req, res) => {
-        const vietnamTime = new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-        const vietnamTimeInMilliseconds = new Date(vietnamTime).getTime(); // Chuyển sang mili giây
+
         const { branchId } = req.query;
         console.log(branchId);
         try {
@@ -154,7 +153,13 @@ class InterestController {
                     $group: {
                         _id: {
                             branch: '$room.branch',
-                            date: { $dateToString: { format: "%d-%m-%Y", date: "$startTime" } },
+                            date: {
+                                $dateToString: {
+                                    format: "%d-%m-%Y", date: {
+                                        $add: ["$startTime", 25200000]
+                                    }
+                                }
+                            },
                             movie: '$movie.name',
                             description: '$movie.description',
                             genre: '$movie.genre',

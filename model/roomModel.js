@@ -11,9 +11,13 @@ const roomSchema = new mongoose.Schema({
     branch: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Branch'
+    },
+    freeTimes: {
+        type: Object,
+        default: []
     }
 },
-{timestamps:true}
+    { timestamps: true }
 );
 
 module.exports = mongoose.model('Room', roomSchema);
