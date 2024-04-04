@@ -23,6 +23,9 @@ const interestSchema = new mongoose.Schema({
         type: String,
         enum: ['Chưa bắt đầu', 'Đang diễn ra', 'Đã kết thúc'],
         default: 'Chưa bắt đầu'
-    }
+    },
+    price: {
+        type:Number
+    },
 })
 module.exports = mongoose.model("Interest", interestSchema);

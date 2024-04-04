@@ -35,7 +35,9 @@ const bookSchema = new mongoose.Schema({
       }
     }
   }
-});
+},
+  {timestamps:true}
+);
 
 bookSchema.pre(/^find/, function(next) {
   this.populate({

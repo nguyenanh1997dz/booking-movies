@@ -66,5 +66,24 @@ class BranchController {
             });
         }
     })
+    static getBranchById = asyncHandler(async (req, res) => {
+        const { id } = req.params
+        try {
+            const branche = await Branch.find({ _id: id }).populate("rooms");
+            if (!branche || branche.length === 0) {
+                return res.status(404).json({
+                    message: "Không tìm thấy chi nhánh rạp"
+                });
+            }
+            return res.status(200).json({
+                message: "Thành công",
+                data: branche
+            });
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi tìm chi nhánh rạp " + error.message
+            });
+        }
+    })
 }
 module.exports = BranchController
