@@ -1,9 +1,8 @@
 const mongoose = require('mongoose');
 
 const bookSchema = new mongoose.Schema({
-  user: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+  email: {
+    type: String
   },
   branch: {
     type: mongoose.Schema.Types.ObjectId,
@@ -29,13 +28,8 @@ const bookSchema = new mongoose.Schema({
       enum: ['Chưa thanh toán', 'Đã thanh toán','Đã hủy'],
       default: 'Chưa thanh toán'
     },
-    cardDetails: {
-      type: {
-        cardNumber: String,
-        cardHolderName: String,
-        expirationDate: String,
-        cvv: String
-      },
+    details: {
+      type: {Object},
       required: function() {
         return this.payment.method === 'Thẻ'; 
       }
@@ -50,7 +44,7 @@ bookSchema.pre(/^find/, function(next) {
       { path: 'movie' },
       { path: 'room', populate: { path: 'branch'} } 
     ]
-  }).populate('branch', 'name').populate('user', 'fullName');
+  }).populate('branch', 'name')
   next();
 });
 

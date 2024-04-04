@@ -430,16 +430,12 @@ class InterestController {
     }
   });
   static getInterestByMovie = asyncHandler(async (req, res) => {
-    const { idMovie } = req.query;
-    const validQueryFields = ["movie", "status"];
+    const { idMovie , status ="Chưa bắt đầu" } = req.query;
     try {
         const query = {};
-        validQueryFields.forEach((field) => {
-            if (req.query[field]) {
-                query[field] = req.query[field];
-            }
-        });
-        query["status"] =  "Chưa bắt đầu" ; 
+        if (status) {
+          query["status"] = status;
+        }
         if (idMovie) {
             query["movie"] = idMovie;
         }
