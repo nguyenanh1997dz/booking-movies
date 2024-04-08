@@ -6,5 +6,6 @@ const router = express.Router();
 router.get("/", BookController.getAllBook)
 router.get("/:id", BookController.getBookById)
 router.post("/", BookController.createBook)
-
+router.post("/cash", BookController.confirmCashPaymentSuccess)
+router.post("/vnpay", BookController.confirmVnpayPaymentSuccess)
 module.exports = router;

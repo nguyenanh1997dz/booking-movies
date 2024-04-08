@@ -18,10 +18,14 @@ const bookSchema = new mongoose.Schema({
   price: {
     type: Number
   },
+  orderId: {
+    type: String,
+    unique: true
+  },
   payment:{
     method: {
       type: String,
-      enum: ['Tiền mặt', 'Thẻ', 'Khác']
+      enum: ['Tiền mặt', 'VNPAY', 'Khác']
     },
     status: {
       type: String,
@@ -31,7 +35,7 @@ const bookSchema = new mongoose.Schema({
     details: {
       type: {Object},
       required: function() {
-        return this.payment.method === 'Thẻ'; 
+        return this.payment.method === 'VNPAY'; 
       }
     }
   }

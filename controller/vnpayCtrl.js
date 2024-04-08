@@ -8,7 +8,6 @@ class VNPAYController {
   static createPayment = asyncHandler((req, res) => {
     try {
       process.env.TZ = "Asia/Ho_Chi_Minh";
-
       let date = new Date();
       let createDate = moment(date).format("YYYYMMDDHHmmss");
       let ipAddr =
@@ -16,14 +15,13 @@ class VNPAYController {
         req.connection.remoteAddress ||
         req.socket.remoteAddress ||
         req.connection.socket.remoteAddress;
-
       let tmnCode = config.get("vnp_TmnCode");
       let secretKey = config.get("vnp_HashSecret");
       let vnpUrl = config.get("vnp_Url");
       let returnUrl = config.get("vnp_ReturnUrl");
-      let orderId = moment(date).format("DDHHmmss");
-      let amount = req.body.amount;
-      let bankCode = req.body.bankCode;
+      let orderId = req.query.orderId
+      let amount = req.query.amount;
+      let bankCode = req.query.bankCode;
       let locale = req.body.language;
       if (locale === null || locale === undefined || locale === "") {
         locale = "vn";
@@ -65,6 +63,7 @@ class VNPAYController {
     let secureHash = vnp_Params["vnp_SecureHash"];
     delete vnp_Params["vnp_SecureHash"];
     delete vnp_Params["vnp_SecureHashType"];
+    delete vnp_Params["a"];
     vnp_Params = sortObject(vnp_Params);
     let secretKey = config.get("vnp_HashSecret");
     let signData = querystring.stringify(vnp_Params, { encode: false });
@@ -72,19 +71,13 @@ class VNPAYController {
     let hmac = crypto.createHmac("sha512", secretKey);
     let signed = hmac.update(new Buffer.from(signData, "utf-8")).digest("hex");
     if (secureHash === signed) {
-      if (vnp_Params.vnp_ResponseCode !== "0") {
-         return res.status(200).json({
-          message: "Giao dịch thanh toán bị hủy",
-          data: vnp_Params,
-        });
-      }
       return res.status(200).json({
-        message: "Giao dịch thanh toán thành công",
+        message: `Trạng thái: ${errorResponseCode[vnp_Params.vnp_ResponseCode]}`,
         data: vnp_Params,
       });
     } else {
       res.status(500).json({
-        message: "Có lỗi gì đó liên quan vnpay",
+        message: "Có lỗi gì đó liên quan vnpay"
       });
     }
   });
@@ -146,7 +139,6 @@ class VNPAYController {
         return res.status(response.statusCode).json(body);
     });
 })
-
 }
 
 function sortObject(obj) {
