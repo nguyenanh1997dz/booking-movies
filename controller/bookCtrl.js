@@ -82,18 +82,39 @@ class BookController {
   static confirmVnpayPaymentSuccess   = asyncHandler(async (req, res) => {
     const { bookId } = req.query;
     const book = await Book.findById(bookId);
+    const user = await User.findOne({ email: book.email });
     if (book.payment.status !== 'Đã thanh toán') {
       book.payment.method = 'VNPAY';
       book.payment.status = 'Đã thanh toán';
       await book.save();
+      if (user) {
+          await User.findByIdAndUpdate(user._id, { $push: { bookings: book._id } }); 
+      }
   }
     return res.json({
-      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}`
+      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}&result=0`
     })
   })
-  static confirmCancelBookMovie  = asyncHandler(async (req, res) => {
-    
-  })
+  static confirmCancelBookMovie = asyncHandler(async (req, res) => {
+    try {
+      const { bookId } = req.query;
+      const book = await Book.findById(bookId);
+      const seats = book.seats;
+      const formattedSeats = seats.map(seat => String(seat));
+      await Interest.findOneAndUpdate(
+        { _id: book.interest._id },
+        { $pull: { bookedSeats: { $in: formattedSeats } } } 
+      );
+      book.payment.status = "Đã hủy"
+      await book.save();
+      return res.json({
+        url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}&result=1`
+      });
+    } catch (error) {
+      console.error("Error in confirmCancelBookMovie:", error);
+      return res.status(500).json({ error: "Internal server error" });
+    }
+  });
 }
 
 function validateInput(req) {
