@@ -8,12 +8,14 @@ const sendEmail = require("../utils/sendMail");
 const axios  = require("axios");
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
+    const {email} = req.body;
     try {
       validateInput(req);
       const newBook = new Book(req.body);
       const interest = await checkInterestStatus(newBook);
       checkDuplicateSeats(newBook, interest);
-   
+      interest.bookedSeats.push(...newBook.seats);
+      await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(newBook, req.body.paymentMethod, interest,newBook._id);
       return res.redirect(307, redirectUrl);
@@ -59,19 +61,35 @@ class BookController {
       });
     }
   });
-  static confirmCashPaymentSuccess   = asyncHandler(async (req, res) => {
-    const {bookId} = req.query
-    const bookInfo = await Book.findById(bookId)
-    if (!bookInfo) {
-      throw new Error("Không tìm thấy vé")
+  static confirmCashPaymentSuccess = asyncHandler(async (req, res) => {
+    const { bookId} = req.query;
+    const book = await Book.findById(bookId);
+    const user = await User.findOne({ email: book.email });
+    if (!book) {
+        throw new Error("Không tìm thấy vé");
     }
-    bookInfo.payment.method = 'Tiền mặt'
-    bookInfo.payment.status = 'Đã thanh toán'
-    await bookInfo.save()
-    return res.status(200).json({bookInfo})
-  })
+    book.payment.method = 'Tiền mặt';
+    book.payment.status = 'Đã thanh toán';
+    await book.save();
+    if (user) {
+        await User.findByIdAndUpdate(user._id, { $push: { bookings: book._id } }); 
+    }
+    return res.json({
+      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${book._id}`
+    })
+});
+
   static confirmVnpayPaymentSuccess   = asyncHandler(async (req, res) => {
-    res.send(req.query)
+    const { bookId } = req.query;
+    const book = await Book.findById(bookId);
+    if (book.payment.status !== 'Đã thanh toán') {
+      book.payment.method = 'VNPAY';
+      book.payment.status = 'Đã thanh toán';
+      await book.save();
+  }
+    return res.json({
+      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}`
+    })
   })
   static confirmCancelBookMovie  = asyncHandler(async (req, res) => {
     
@@ -104,11 +122,11 @@ function checkDuplicateSeats(newBook, interest) {
 }
 
 // Hàm lưu thông tin thanh toán
-async function savePaymentDetails(newBook, paymentMethod,interest,bookId) {
+async function savePaymentDetails(newBook, paymentMethod,interest,bookId,email) {
   newBook.payment.method = paymentMethod;
   newBook.payment.details = {};
   if (paymentMethod === 'Tiền mặt') {
-      return `/api/v1/book/cash?bookId=${bookId}&`;
+      return `/api/v1/book/cash?bookId=${bookId}`;
   }
   if (paymentMethod === 'VNPAY') {
       return `/api/v1/vnpay?amount=${newBook.price}&bankCode=${paymentMethod}&orderId=${newBook._id}`;

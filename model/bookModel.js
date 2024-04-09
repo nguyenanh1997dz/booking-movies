@@ -18,10 +18,6 @@ const bookSchema = new mongoose.Schema({
   price: {
     type: Number
   },
-  orderId: {
-    type: String,
-    unique: true
-  },
   payment:{
     method: {
       type: String,
@@ -33,10 +29,7 @@ const bookSchema = new mongoose.Schema({
       default: 'Chưa thanh toán'
     },
     details: {
-      type: {Object},
-      required: function() {
-        return this.payment.method === 'VNPAY'; 
-      }
+      type: {Object}
     }
   }
 },

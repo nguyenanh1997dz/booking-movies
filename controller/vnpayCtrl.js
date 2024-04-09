@@ -3,7 +3,7 @@ const moment = require("moment");
 var config = require("config");
 var querystring = require("qs");
 var crypto = require("crypto");
-
+const axios = require("axios");
 class VNPAYController {
   static createPayment = asyncHandler((req, res) => {
     try {
@@ -50,7 +50,7 @@ class VNPAYController {
       vnp_Params["vnp_SecureHash"] = signed;
       vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
       res.status(200).json({
-        vnpUrl,
+        url:vnpUrl
       });
     } catch (error) {
       res.status(500).json({
@@ -58,12 +58,11 @@ class VNPAYController {
       });
     }
   });
-  static getPaymentInfo = asyncHandler((req, res) => {
+  static getPaymentInfo = asyncHandler(async(req, res) => {
     let vnp_Params = req.query;
     let secureHash = vnp_Params["vnp_SecureHash"];
     delete vnp_Params["vnp_SecureHash"];
     delete vnp_Params["vnp_SecureHashType"];
-    delete vnp_Params["a"];
     vnp_Params = sortObject(vnp_Params);
     let secretKey = config.get("vnp_HashSecret");
     let signData = querystring.stringify(vnp_Params, { encode: false });
@@ -71,12 +70,11 @@ class VNPAYController {
     let hmac = crypto.createHmac("sha512", secretKey);
     let signed = hmac.update(new Buffer.from(signData, "utf-8")).digest("hex");
     if (secureHash === signed) {
-      return res.status(200).json({
-        message: `Trạng thái: ${errorResponseCode[vnp_Params.vnp_ResponseCode]}`,
-        data: vnp_Params,
-      });
+      const url = `http://localhost:5000/api/v1/book/vnpay?bookId=${vnp_Params.vnp_TxnRef}`;
+            const response = await axios.post(url); 
+            return  res.redirect(response.data.url)
     } else {
-      res.status(500).json({
+      return  res.status(500).json({
         message: "Có lỗi gì đó liên quan vnpay"
       });
     }

@@ -105,7 +105,7 @@ class InterestController {
           message: "Không tìm thấy lịch chiếu",
         });
       }
-      return res.status(404).json({
+      return res.status(200).json({
         message: "Thành công",
         data: interest,
       });

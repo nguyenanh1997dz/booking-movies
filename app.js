@@ -23,9 +23,18 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(cors({
     origin: process.env.BASE_CLIENT_URL,
-    credentials: true
+    credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Middleware Morgan
 app.use(morgan("dev"));
+
+// Xử lý yêu cầu Preflight OPTIONS
+app.options('*', cors({
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(compression());
 app.use(bodyParser.urlencoded({
     extended: true
