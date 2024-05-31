@@ -439,9 +439,18 @@ class InterestController {
         if (idMovie) {
             query["movie"] = idMovie;
         }
-
-        console.log(query);
-        const interest = await Interest.find(query).populate("movie").populate("room");
+        const interest = await Interest.find(query).populate({
+          path: 'room',
+          populate: {
+            path: 'branch',
+            populate: {
+              path: 'cinema',
+              select: 'name image' 
+            },
+            select: 'name' 
+          },
+          select: 'branch name'
+        });
         res.json(interest);
     } catch (error) {
         throw new Error();
