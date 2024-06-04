@@ -10,6 +10,8 @@ const roomRoute = require('./roomRoute')
 const interestRoute = require('./interestRoute')
 const bookRoute = require('./bookRoute')
 const vnpayRoute = require('./vnpayRoute');
+const foodRoute = require('./foodRoute')
+
 
 router.use("/api/v1/auth", authRoute);
 router.use("/api/v1/movie", movieRoute);
@@ -20,5 +22,5 @@ router.use("/api/v1/room", roomRoute);
 router.use("/api/v1/interest", interestRoute);
 router.use("/api/v1/book", bookRoute);
 router.use("/api/v1/vnpay", vnpayRoute);
-
+router.use("/api/v1/food", foodRoute);
 module.exports = router;

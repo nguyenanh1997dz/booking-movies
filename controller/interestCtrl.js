@@ -116,10 +116,15 @@ class InterestController {
     }
   });
   static getAllBranchInterest = asyncHandler(async (req, res) => {
-    const { branchId } = req.query;
-    console.log(branchId);
+    const { branchId ,movieId } = req.query;
     try {
-      let aggregationPipeline = [
+      let aggregationPipeline = []
+      if (movieId) {
+        aggregationPipeline.push({
+          $match: { movie: new mongoose.Types.ObjectId(movieId) },
+        });
+      }
+       aggregationPipeline.push(
         {
           $lookup: {
             from: "movies",
@@ -224,17 +229,14 @@ class InterestController {
             _id: 0,
           },
         },
-      ];
-
-      if (branchId) {
+       );
+       if (branchId) {
         aggregationPipeline.push({
           $match: { branch: new mongoose.Types.ObjectId(branchId) },
         });
       }
-
+      console.log(aggregationPipeline);
       const interests = await Interest.aggregate(aggregationPipeline);
-      console.log(interests);
-
       return res.status(200).json({
         message: "Thành công",
         data: interests,
