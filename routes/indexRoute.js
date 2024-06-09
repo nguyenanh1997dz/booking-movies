@@ -11,6 +11,8 @@ const interestRoute = require('./interestRoute')
 const bookRoute = require('./bookRoute')
 const vnpayRoute = require('./vnpayRoute');
 const foodRoute = require('./foodRoute')
+const blogRoute = require('./blogRoute')
+const contentRoute = require('./contentRoute')
 
 
 router.use("/api/v1/auth", authRoute);
@@ -23,4 +25,6 @@ router.use("/api/v1/interest", interestRoute);
 router.use("/api/v1/book", bookRoute);
 router.use("/api/v1/vnpay", vnpayRoute);
 router.use("/api/v1/food", foodRoute);
+router.use("/api/v1/blog", blogRoute);
+router.use("/api/v1/content", contentRoute);
 module.exports = router;
