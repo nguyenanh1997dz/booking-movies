@@ -10,5 +10,6 @@ router.post("/", MovieController.createMovie)
 router.put("/:id", MovieController.updateMovie)
 router.delete("/:id", MovieController.deleteMovie)
 router.post("/img", uploadPhoto.single("image"), imgResize, MovieController.uploadImgMovie)
+router.get("/top-movies/:genreId", MovieController.getTopMoviesByGenre)
 router.delete("/img/:id", MovieController.deleteImageMovie)
 module.exports = router;

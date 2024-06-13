@@ -141,12 +141,41 @@ class MovieController {
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
-      await Movie.findByIdAndUpdate({_id : id}, req.body ,{new: true});
+      await Movie.findByIdAndUpdate({ _id: id }, req.body, { new: true });
       res.status(200).json({ message: "Cập nhật bộ phim thành công" });
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Lỗi sửa phim", error: error.message });
     }
   });
+
+  static getTopMoviesByGenre = asyncHandler(async (req, res) => {
+    const { genreId } = req.params; // Lấy thể loại từ tham số URL
+    try {
+      const genre = await Genre.findById(genreId);
+      if (!genre) {
+        return res.status(404).json({
+          message: `Không tìm thấy thể loại với id ${genreId}`,
+        });
+      }
+
+      const topMovies = await Movie.find({ genre: genre._id })
+        .sort({ views: -1 })
+        .limit(10)
+        .populate("genre", "name");
+
+      res.status(200).json({
+        message: "Thành công",
+        data: topMovies,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        message: "Lỗi trong quá trình lấy dữ liệu phim",
+        error: error.message,
+      });
+    }
+  });
+
 }
 module.exports = MovieController;

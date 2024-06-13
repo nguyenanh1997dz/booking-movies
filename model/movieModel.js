@@ -16,6 +16,10 @@ const movieSchema = new mongoose.Schema({
             ref: 'Genre'
         }]
     },
+    view: {
+        type: Number,
+        default: 0
+    },
     cast: {
         type: [String]
     },
