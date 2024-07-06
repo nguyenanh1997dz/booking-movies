@@ -138,6 +138,7 @@ class MovieController {
     const { id } = req.params;
     try {
       let movie = await Movie.findById(id);
+      console.log(movie)
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
@@ -149,21 +150,15 @@ class MovieController {
     }
   });
 
-  static getTopMoviesByGenre = asyncHandler(async (req, res) => {
-    const { genreId } = req.params; // Lấy thể loại từ tham số URL
+  static getTopMovies = asyncHandler(async (req, res) => {
     try {
-      const genre = await Genre.findById(genreId);
-      if (!genre) {
-        return res.status(404).json({
-          message: `Không tìm thấy thể loại với id ${genreId}`,
-        });
-      }
-
-      const topMovies = await Movie.find({ genre: genre._id })
-        .sort({ views: -1 })
+      const topMovies = await Movie.find()
+        .sort({ view: -1 })
         .limit(10)
-        .populate("genre", "name");
 
+  
+      console.log(topMovies);
+  
       res.status(200).json({
         message: "Thành công",
         data: topMovies,
@@ -171,8 +166,7 @@ class MovieController {
     } catch (error) {
       console.error(error);
       res.status(500).json({
-        message: "Lỗi trong quá trình lấy dữ liệu phim",
-        error: error.message,
+        message: `Có lỗi trong quá trình lấy dữ liệu phim: ${error.message}`,
       });
     }
   });
