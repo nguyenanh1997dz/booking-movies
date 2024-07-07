@@ -13,6 +13,7 @@ const vnpayRoute = require('./vnpayRoute');
 const foodRoute = require('./foodRoute')
 const blogRoute = require('./blogRoute')
 const contentRoute = require('./contentRoute')
+const sliderRoute = require('./sliderRoute')
 
 
 router.use("/api/v1/auth", authRoute);
@@ -27,4 +28,5 @@ router.use("/api/v1/vnpay", vnpayRoute);
 router.use("/api/v1/food", foodRoute);
 router.use("/api/v1/blog", blogRoute);
 router.use("/api/v1/content", contentRoute);
+router.use("/api/v1/slider", sliderRoute);
 module.exports = router;
