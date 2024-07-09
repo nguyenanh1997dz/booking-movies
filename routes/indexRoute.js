@@ -14,7 +14,7 @@ const foodRoute = require('./foodRoute')
 const blogRoute = require('./blogRoute')
 const contentRoute = require('./contentRoute')
 const sliderRoute = require('./sliderRoute')
-
+const couponRoute = require('./couponRoute')
 
 router.use("/api/v1/auth", authRoute);
 router.use("/api/v1/movie", movieRoute);
@@ -29,4 +29,5 @@ router.use("/api/v1/food", foodRoute);
 router.use("/api/v1/blog", blogRoute);
 router.use("/api/v1/content", contentRoute);
 router.use("/api/v1/slider", sliderRoute);
+router.use("/api/v1/coupon", couponRoute);
 module.exports = router;

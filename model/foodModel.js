@@ -21,6 +21,10 @@ const foodSchema = new mongoose.Schema({
         type: String,
         enum: ['còn hàng', 'hết hàng'],  
         default: "còn hàng",
+    },
+    totalSales: {
+        type: Number,
+        default: 0,
     }
 });
 
