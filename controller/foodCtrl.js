@@ -1,5 +1,6 @@
 const asyncHandler = require("express-async-handler");
 const Food = require("../model/foodModel");
+const UploadImageService = require("../service/uploadImage");
 
 class FoodController {
     static create = asyncHandler(async (req, res) => {
@@ -28,5 +29,13 @@ class FoodController {
             })
         }
     })
+    
+  static uploadImgFood = asyncHandler(async (req, res) => {
+    const img = await UploadImageService.upLoadImage(req, res, "food");
+    res.json({
+      message: "Thành công",
+      data: img,
+    });
+  })
 }
 module.exports = FoodController
