@@ -21,6 +21,8 @@ class MovieController {
 
   static uploadImgMovie = asyncHandler(async (req, res) => {
     const img = await UploadImageService.upLoadImage(req, res, "movies");
+
+    console.log(img);
     res.json({
       message: "Thành công",
       data: img,

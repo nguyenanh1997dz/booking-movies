@@ -15,5 +15,18 @@ class FoodController {
             })
         }
     })
+    static getAll = asyncHandler(async (req, res) => {
+        try {
+            const foods = await Food.find()
+            return res.status(200).json({
+                message: "Thành công",
+                data: foods
+            })
+        } catch (error) {
+            return res.status(500).json({
+                message: "Có lỗi  " + error.message
+            })
+        }
+    })
 }
 module.exports = FoodController
