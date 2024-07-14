@@ -24,6 +24,10 @@ const foodSchema = new mongoose.Schema({
     totalSales: {
         type: Number,
         default: 0,
+    },
+    quantity: {
+        type: Number,
+        default: 100,
     }
 });
 
