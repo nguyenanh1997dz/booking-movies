@@ -78,14 +78,12 @@ static deleteImageslider = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
       let slider = await slider.findById(id);
-      console.log(slider)
       if (!slider) {
         return res.status(404).json({ message: "Không tìm thấy slider" });
       }
-      await slider.findByIdAndUpdate({ _id: id }, req.body, { new: true });
+      await Slider.findByIdAndUpdate({ _id: id }, req.body, { new: true });
       res.status(200).json({ message: "Cập nhật slider thành công" });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ message: "Lỗi sửa slider", error: error.message });
     }
   });
