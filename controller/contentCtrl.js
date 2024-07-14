@@ -129,5 +129,25 @@ class ContentController {
             });
         }
     });
+    static getTopContent = asyncHandler(async (req, res) => {
+        try {
+          const topContent = await Content.find()
+            .sort({ view: -1 })
+            .limit(10)
+    
+      
+          console.log(topContent);
+      
+          res.status(200).json({
+            message: "Thành công",
+            data: topContent,
+          });
+        } catch (error) {
+          console.error(error);
+          res.status(500).json({
+            message: `Có lỗi trong quá trình lấy dữ liệu phim: ${error.message}`,
+          });
+        }
+      });
 }
 module.exports = ContentController;

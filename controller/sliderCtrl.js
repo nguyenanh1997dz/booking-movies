@@ -20,6 +20,24 @@ class sliderController {
     }
 })
 
+static uploadImgSlider = asyncHandler(async (req, res) => {
+  const img = await UploadImageService.upLoadImage(req, res, "slider");
+  res.json({
+    message: "Thành công",
+    data: img,
+  });
+})
+
+
+static deleteImageslider = asyncHandler(async (req, res) => {
+  const { id } = req.params
+  let formatId = "slider/" + id;
+  await UploadImageService.deleteImage(formatId)
+  res.json({
+    message: " xóa Thành công",
+  });
+})
+
   static getAllSlider = asyncHandler(async (req, res) => {
     try {
       const sliders = await Slider.find({});

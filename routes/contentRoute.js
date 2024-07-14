@@ -8,4 +8,5 @@ router.post("/", ContentController.createContent)
 router.delete("/:id", ContentController.deleteContent)
 router.put("/:id", ContentController.updateContent)
 router.post('/:id/increase-hot', ContentController.increaseHot);
+router.get("/top/top-content", ContentController.getTopContent)
 module.exports = router;
