@@ -235,7 +235,6 @@ class InterestController {
           $match: { branch: new mongoose.Types.ObjectId(branchId) },
         });
       }
-      console.log(aggregationPipeline);
       const interests = await Interest.aggregate(aggregationPipeline);
       return res.status(200).json({
         message: "Thành công",

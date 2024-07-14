@@ -14,13 +14,16 @@ const foodSchema = new mongoose.Schema({
         required: true,
     },
     image: {
-        type: String,  
-        required: true,
+        type: Object
     },
     status: {
         type: String,
         enum: ['còn hàng', 'hết hàng'],  
         default: "còn hàng",
+    },
+    totalSales: {
+        type: Number,
+        default: 0,
     }
 });
 
