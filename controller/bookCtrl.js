@@ -108,7 +108,7 @@ class BookController {
       book.payment.status = "Đã hủy"
       await book.save();
       return res.json({
-        url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}&result=1`
+        url: `${process.env.BASE_CLIENT_URL}`
       });
     } catch (error) {
       console.error("Error in confirmCancelBookMovie:", error);
