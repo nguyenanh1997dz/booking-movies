@@ -18,6 +18,18 @@ const bookSchema = new mongoose.Schema({
   price: {
     type: Number
   },
+  extras: [
+    {
+      itemId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Food' 
+      },
+      quantity: {
+        type: Number,
+        default: 1
+      }
+    }
+  ],
   payment:{
     method: {
       type: String,
