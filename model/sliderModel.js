@@ -6,6 +6,10 @@ const sliderSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    link: {
+        type: String,
+        required: true,
+    },
     image: {
         type: Object
     }

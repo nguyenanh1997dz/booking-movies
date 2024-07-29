@@ -4,6 +4,8 @@ const Content = require("../model/contentModel")
 class ContentController {
     static createContent = asyncHandler(async (req, res) => {
         try {
+            console.log(req.description)
+            console.log(req.body)
             const newContent = await Content.create(req.body)
             return res.status(200).json({
                 message: "Tạo bài viết thành công",
@@ -30,32 +32,31 @@ class ContentController {
     })
     static getContentById = asyncHandler(async (req, res) => {
         const { id } = req.params
+        console.log("haha")
         try {
-            const genre = await Content.findById(id).exec();
-            if (!genre) {
+            const content = await Content.findById(id);
+            if (!content) {
                 return res.status(404).json({
-                    message: "Không tìm thấy thể loại phim"
+                    message: "Không tìm thấy bài viết"
                 });
             }
             return res.status(200).json({
                 message: "Thành công",
-                data: genre
+                data: content
             });
         } catch (error) {
             return res.status(500).json({
-                message: "Có lỗi trong quá trình lấy dữ liệu thể loại phim " + error.message
+                message: "Có lỗi trong quá trình lấy dữ liệu bài viết " + error.message
             });
         }
     })
     static deleteContent = asyncHandler(async (req, res) => {
+        console.log('haha')
         try {
             const contentId = req.params.id
-
-
-
-            await Movie.updateMany({ content: contentId }, { $pull: { content: contentId } })
-            await Status.findByIdAndDelete(contentId)
-            // await branch.save()
+            console.log(contentId)
+            await Content.updateMany({ content: contentId }, { $pull: { content: contentId } })
+            await Content.findByIdAndDelete(contentId)
 
             return res.status(200).json({
                 message: "Xóa thể loại thành công",
@@ -102,6 +103,14 @@ class ContentController {
             });
         }
     });
+
+    static uploadImgContent = asyncHandler(async (req, res) => {
+        const img = await UploadImageService.upLoadImage(req, res, "content");
+        res.json({
+          message: "Thành công",
+          data: img,
+        });
+      })
 
     static increaseHot = asyncHandler(async (req, res) => {
         const { id } = req.params;
