@@ -96,8 +96,10 @@ class BookController {
     })
   })
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
+    console.log(123);
     try {
       const { bookId } = req.query;
+   
       const book = await Book.findById(bookId);
       const seats = book.seats;
       const formattedSeats = seats.map(seat => String(seat));
