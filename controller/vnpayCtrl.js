@@ -77,7 +77,6 @@ class VNPAYController {
       }
       const url = `http://localhost:5000/api/v1/book/vnpay?bookId=${vnp_Params.vnp_TxnRef}`;
       const response = await axios.post(url);
-      console.log(response);
       return res.redirect(response.data.url)
     } else {
       return  res.status(500).json({
