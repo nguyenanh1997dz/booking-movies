@@ -1,6 +1,7 @@
 const asyncHandler = require("express-async-handler");
 const Book = require("../model/bookModel");
 const User = require("../model/userModel");
+const Food = require("../model/foodModel");
 const Interest = require("../model/interestModel");
 const moment = require("moment");
 const paymentMethodsAray = ["Tiền mặt", "VNPAY"];
@@ -74,15 +75,28 @@ class BookController {
     if (user) {
         await User.findByIdAndUpdate(user._id, { $push: { bookings: book._id } }); 
     }
-    return res.json({
-      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${book._id}`
-    })
+     return res.json(book);
 });
 
   static confirmVnpayPaymentSuccess   = asyncHandler(async (req, res) => {
     const { bookId } = req.query;
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
+    for (const extra of book.extras) {
+      const { itemId, quantity, price } = extra;
+      const food = await Food.findById(itemId);
+      if (!food) {
+        console.error(`Food item with ID ${itemId} not found.`);
+        continue;
+      }
+      const newQuantity = food.quantity - quantity;
+      const newTotalSales = food.totalSales + quantity;
+      const newTotalSalesPrice = food.totalSalesPrice + price;
+      await Food.findByIdAndUpdate(itemId,{
+        totalSales:newTotalSales,
+        totalSalesPrice:newTotalSalesPrice
+      })
+    }
     if (book.payment.status !== 'Đã thanh toán') {
       book.payment.method = 'VNPAY';
       book.payment.status = 'Đã thanh toán';
@@ -96,7 +110,6 @@ class BookController {
     })
   })
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
-    console.log(123);
     try {
       const { bookId } = req.query;
    
