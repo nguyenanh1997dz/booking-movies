@@ -1,6 +1,7 @@
 const express = require("express");
 const UserController = require("../controller/userCtrl");
 const { authMiddleware, isAdmin} = require("../middleware/authMiddlewere");
+const { imgResize, uploadPhoto } = require("../middleware/upLoadImage");
 const router = express.Router();
 
 router.post("/register",UserController.createUser);
@@ -28,5 +29,6 @@ router.put("/change-password",authMiddleware,UserController.changePassword)
 router.get("/forgot-password/:email",UserController.forgotPassword)
 
 router.post("/reset-password",UserController.reset_Password)
-
+router.post("/img", uploadPhoto.single("avatar"), imgResize, UserController.uploadAvatar)
+router.post("/reset-password",UserController.reset_Password)
 module.exports = router;

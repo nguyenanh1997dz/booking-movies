@@ -5,6 +5,7 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 var notp = require('notp');
 const sendEmail = require("../utils/sendMail");
+const UploadImageService = require("../service/uploadImage");
 
 
 class UserController {
@@ -279,6 +280,13 @@ class UserController {
       res.status(500).json({ message: "Có lỗi khi cập nhật dữ liệu" });
     }
   });
+  static uploadAvatar = asyncHandler(async (req, res ) => {
+    const img = await UploadImageService.upLoadImage(req, res, "avatar");
+    res.json({
+      message: "Thành công",
+      data: img,
+    });
+  })
 }
 
 module.exports = UserController;

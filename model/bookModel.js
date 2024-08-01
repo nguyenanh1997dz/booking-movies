@@ -36,7 +36,7 @@ const bookSchema = new mongoose.Schema({
   payment:{
     method: {
       type: String,
-      enum: ['Tiền mặt', 'VNPAY', 'Khác']
+      enum: ['Tiền mặt', 'VNPAY', 'ZALOPAY']
     },
     status: {
       type: String,
