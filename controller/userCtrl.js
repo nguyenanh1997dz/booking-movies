@@ -48,9 +48,6 @@ class UserController {
         { new: true }
       );
       return res.status(200).json({
-        userId: updateuser?._id,
-        fullName: updateuser?.fullName,
-        email: updateuser?.email,
         accessToken: accessToken,
       });
     } else {
@@ -264,7 +261,8 @@ class UserController {
     }
   });
   static updateUser = asyncHandler(async (req, res) => {
-    const { id } = req.params;
+    const {id,fullName,password ,address} =req.body
+
     try {
       const user = await User.findOne({_id: id});
       if (!user) {
@@ -272,7 +270,10 @@ class UserController {
           message: "Không tìm thấy tài khoản",
         });
       }
-      await User.findByIdAndUpdate(id, req.body, { new: true });
+      user.fullName = fullName ?? user.fullName 
+      user.password = password ?? user.password
+      user.address = address ?? user.address
+      await user.save()
       res.status(200).json({
         message: "Cập nhật thành công",
       });
