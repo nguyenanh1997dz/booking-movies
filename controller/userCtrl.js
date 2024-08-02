@@ -78,7 +78,11 @@ class UserController {
     });
     res.sendStatus(204);
   });
-
+  static getCurentUser = asyncHandler(async (req, res) =>{
+    const { id } = req.user;
+    const user = await User.findById(id);
+    res.json(user);
+  })
   static getAllUser = asyncHandler(async (req, res) => {
     try {
       const getAllUser = await User.find();
@@ -90,7 +94,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
   static getUserById = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {

@@ -31,7 +31,6 @@ class BookController {
       });
     }
   });
-
   static getAllBook = asyncHandler(async (req, res) => {
     const { user, sort = "-createdAt" } = req.query;
     const validQueryFields = ["user", "branch", "interest", "room"];
@@ -97,7 +96,6 @@ class BookController {
     }
     return res.json(book);
   });
-
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
     const { bookId } = req.query;
     const book = await Book.findById(bookId);

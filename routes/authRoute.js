@@ -12,7 +12,7 @@ router.post("/logout", UserController.logout);
 
 router.post("/refreshToken", UserController.refreshToken);
 
-router.get("/get-all-users",authMiddleware,isAdmin,UserController.getAllUser)
+router.get("/current-user",authMiddleware,UserController.getCurentUser)
 
 router.get("/get-user-by-id/:id",UserController.getUserById)
 
@@ -29,6 +29,7 @@ router.put("/change-password",authMiddleware,UserController.changePassword)
 router.get("/forgot-password/:email",UserController.forgotPassword)
 
 router.post("/reset-password",UserController.reset_Password)
+
 router.post("/img", uploadPhoto.single("avatar"), imgResize, UserController.uploadAvatar)
 router.post("/reset-password",UserController.reset_Password)
 module.exports = router;
