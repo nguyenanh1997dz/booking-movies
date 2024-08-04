@@ -28,6 +28,13 @@ const userSchema = new mongoose.Schema(
     address: {
       type: String,
     },
+    phone: {
+      type: String,
+    },
+    avatar: {
+      url: String,
+      publicId : String
+    },
     refreshToken: {
       type: String,
     },
