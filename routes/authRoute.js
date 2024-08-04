@@ -31,5 +31,5 @@ router.get("/forgot-password/:email",UserController.forgotPassword)
 router.post("/reset-password",UserController.reset_Password)
 
 router.post("/img", uploadPhoto.single("avatar"), imgResize, UserController.uploadAvatar)
-router.post("/reset-password",UserController.reset_Password)
+
 module.exports = router;

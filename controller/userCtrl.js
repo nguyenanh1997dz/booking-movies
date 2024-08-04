@@ -106,7 +106,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
   static changePassword = asyncHandler(async (req, res) => {
     const { _id } = req.user;
     const { password} = req.body; 
@@ -127,7 +126,6 @@ class UserController {
       res.status(500).json({ message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng." });
     }
   })
-  
   static forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.params;
     if (!email) throw new Error("Không có email");
@@ -155,7 +153,6 @@ class UserController {
         throw new Error("Đã xảy ra lỗi khi gửi email.");
     }
 });
-
   static reset_Password = asyncHandler(async (req, res) => {
     const {otp, password,email} = req.body;
     if (!otp || !password || !email) {
@@ -179,7 +176,6 @@ class UserController {
     res.status(200).json({ message: "Thành công", data:updatedPassword
   })
   })
-
   static deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -191,7 +187,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
   static refreshToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     console.log(refreshToken);
@@ -221,7 +216,6 @@ class UserController {
 
     return res.status(200).json({ accessToken: newAccessToken });
   });
-
   static blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -242,7 +236,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
   static unBlockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -265,7 +258,7 @@ class UserController {
   });
   static updateUser = asyncHandler(async (req, res) => {
     const {id,fullName,password ,address} =req.body
-
+   
     try {
       const user = await User.findOne({_id: id});
       if (!user) {
