@@ -3,10 +3,9 @@ const User = require("../model/userModel");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-var notp = require('notp');
+var notp = require("notp");
 const sendEmail = require("../utils/sendMail");
 const UploadImageService = require("../service/uploadImage");
-
 
 class UserController {
   static createUser = asyncHandler(async (req, res) => {
@@ -19,11 +18,11 @@ class UserController {
       throw new Error("Email đã được sử dụng");
     }
   });
-
   static login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
-    if (findUser && findUser.isBlocked == true) res.status(403).json({ message: "Tài khoản đã bị khóa"});
+    if (findUser && findUser.isBlocked == true)
+      res.status(403).json({ message: "Tài khoản đã bị khóa" });
     if (findUser && (await findUser.isPasswordMatched(password))) {
       const refreshToken = jwt.sign(
         { userId: findUser._id },
@@ -38,7 +37,7 @@ class UserController {
       const accessToken = jwt.sign(
         { userId: findUser._id },
         process.env.JWT_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: "1d" }
       );
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
@@ -57,7 +56,6 @@ class UserController {
       });
     }
   });
-
   static logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken)
@@ -78,11 +76,11 @@ class UserController {
     });
     res.sendStatus(204);
   });
-  static getCurentUser = asyncHandler(async (req, res) =>{
+  static getCurentUser = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const user = await User.findById(id);
     res.json(user);
-  })
+  });
   static getAllUser = asyncHandler(async (req, res) => {
     try {
       const getAllUser = await User.find();
@@ -108,7 +106,7 @@ class UserController {
   });
   static changePassword = asyncHandler(async (req, res) => {
     const { _id } = req.user;
-    const { password} = req.body; 
+    const { password } = req.body;
     try {
       const user = await User.findById(_id);
       if (!user) {
@@ -119,20 +117,22 @@ class UserController {
         const updatedPassword = await user.save();
         res.json({
           message: "Cập nhật mật khẩu thành công",
-          data: updatedPassword.password
+          data: updatedPassword.password,
         });
       }
     } catch (error) {
-      res.status(500).json({ message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng." });
+      res
+        .status(500)
+        .json({ message: "Đã xảy ra lỗi khi cập nhật thông tin người dùng." });
     }
-  })
+  });
   static forgotPassword = asyncHandler(async (req, res) => {
     const { email } = req.params;
     if (!email) throw new Error("Không có email");
     const user = await User.findOne({ email });
     if (!user) throw new Error("Email không có trong database");
     const otp = notp.totp.gen(process.env.KEY_SECRET_OTP);
-    console.log(typeof(otp));
+    console.log(typeof otp);
     const html = `
         <p>Xin chào ${user.fullName},</p>
         <p>Dưới đây là mã OTP của bạn để đặt lại mật khẩu có hiệu lực trong vòng 5 phút:</p>
@@ -142,40 +142,41 @@ class UserController {
         <p>Đội ngũ hỗ trợ của chúng tôi</p>
     `;
     const data = {
-        to: email,
-        subject: "Yêu cầu đặt lại mật khẩu",
-        html: html,
+      to: email,
+      subject: "Yêu cầu đặt lại mật khẩu",
+      html: html,
     };
     try {
-        await sendEmail(data);
-        return res.json({ message: "Email chứa mã OTP đã được gửi đến địa chỉ email của bạn." });
+      await sendEmail(data);
+      return res.json({
+        message: "Email chứa mã OTP đã được gửi đến địa chỉ email của bạn.",
+      });
     } catch (error) {
-        throw new Error("Đã xảy ra lỗi khi gửi email.");
+      throw new Error("Đã xảy ra lỗi khi gửi email.");
     }
-});
+  });
   static reset_Password = asyncHandler(async (req, res) => {
-    const {otp, password,email} = req.body;
+    const { otp, password, email } = req.body;
     if (!otp || !password || !email) {
       return res.status(401).json({
-        message: "Thiếu thông tin."
-      })
+        message: "Thiếu thông tin.",
+      });
     }
-    const user = await User.findOne({email: email});
-    if (!user){
+    const user = await User.findOne({ email: email });
+    if (!user) {
       return res.status(401).json({
-        message: "Không tìm thấy email."
-      })
+        message: "Không tìm thấy email.",
+      });
     }
     const verified = notp.totp.verify(otp, process.env.KEY_SECRET_OTP);
-    console.log(otp,verified);
+    console.log(otp, verified);
     if (!verified) {
       return res.status(400).json({ message: "Mã OTP không hợp lệ" });
-  }
+    }
     user.password = password;
     const updatedPassword = await user.save();
-    res.status(200).json({ message: "Thành công", data:updatedPassword
-  })
-  })
+    res.status(200).json({ message: "Thành công", data: updatedPassword });
+  });
   static deleteUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
@@ -191,21 +192,17 @@ class UserController {
     const refreshToken = req.cookies.refreshToken;
     console.log(refreshToken);
     if (!refreshToken) {
-      return res
-        .status(403)
-        .json({
-          message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại",
-        });
+      return res.status(403).json({
+        message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại",
+      });
     }
 
     const user = await User.findOne({ refreshToken });
     if (!user) {
-      return res
-        .status(403)
-        .json({
-          message:
-            "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại",
-        });
+      return res.status(403).json({
+        message:
+          "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại",
+      });
     }
 
     const newAccessToken = jwt.sign(
@@ -257,33 +254,43 @@ class UserController {
     }
   });
   static updateUser = asyncHandler(async (req, res) => {
-    const {id,fullName,password ,address} =req.body
-   
+    const { id } = req.params;
+    const { fullName, password, address, phone, avatar } = req.body;
+
     try {
-      const user = await User.findOne({_id: id});
+      const user = await User.findOne({ _id: id });
       if (!user) {
         return res.status(404).json({
           message: "Không tìm thấy tài khoản",
         });
       }
-      user.fullName = fullName ?? user.fullName 
-      user.password = password ?? user.password
-      user.address = address ?? user.address
-      await user.save()
+      user.fullName = fullName ?? user.fullName;
+      user.password = password ?? user.password;
+      user.address = address ?? user.address;
+      user.phone = phone ?? user.phone;
+      if (avatar) {
+        user.avatar.url = avatar.url;
+        user.avatar.publicId = avatar.publicId;
+      }
+
+      await user.save();
       res.status(200).json({
         message: "Cập nhật thành công",
+        data: user,
       });
     } catch (error) {
-      res.status(500).json({ message: "Có lỗi khi cập nhật dữ liệu" });
+      res
+        .status(500)
+        .json({ message: "Có lỗi khi cập nhật dữ liệu", err: error.message });
     }
   });
-  static uploadAvatar = asyncHandler(async (req, res ) => {
+  static uploadAvatar = asyncHandler(async (req, res) => {
     const img = await UploadImageService.upLoadImage(req, res, "avatar");
     res.json({
       message: "Thành công",
       data: img,
     });
-  })
+  });
 }
 
 module.exports = UserController;
