@@ -19,7 +19,6 @@ class UserController {
       throw new Error("Email đã được sử dụng");
     }
   });
-
   static login = asyncHandler(async (req, res) => {
     const { email, password } = req.body;
     const findUser = await User.findOne({ email });
@@ -38,7 +37,7 @@ class UserController {
       const accessToken = jwt.sign(
         { userId: findUser._id },
         process.env.JWT_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: "1d" }
       );
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
@@ -57,7 +56,6 @@ class UserController {
       });
     }
   });
-
   static logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken)
