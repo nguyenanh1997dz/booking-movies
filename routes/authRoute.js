@@ -15,10 +15,11 @@ router.post("/refreshToken", UserController.refreshToken);
 router.get("/current-user",authMiddleware,UserController.getCurentUser)
 
 router.get("/get-user-by-id/:id",UserController.getUserById)
+router.get("/get-all-users",UserController.getAllUser)
 
 router.delete("/delete-user/:id",UserController.deleteUser)
 
-router.put("/update-user",UserController.updateUser)
+router.put("/update-user/:id",UserController.updateUser)
 
 router.put("/block-user/:id",authMiddleware,isAdmin,UserController.blockUser)
 

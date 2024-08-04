@@ -264,7 +264,8 @@ class UserController {
     }
   });
   static updateUser = asyncHandler(async (req, res) => {
-    const {id,fullName,password ,address} =req.body
+    const { id } = req.params;
+    const {fullName,password ,address, phone, avatar} =req.body
 
     try {
       const user = await User.findOne({_id: id});
@@ -276,12 +277,19 @@ class UserController {
       user.fullName = fullName ?? user.fullName 
       user.password = password ?? user.password
       user.address = address ?? user.address
+      user.phone = phone ?? user.phone
+      if(avatar){
+        user.avatar.url = avatar.url 
+        user.avatar.publicId = avatar.publicId
+      }
+     
       await user.save()
       res.status(200).json({
         message: "Cập nhật thành công",
+        data : user
       });
     } catch (error) {
-      res.status(500).json({ message: "Có lỗi khi cập nhật dữ liệu" });
+      res.status(500).json({ message: "Có lỗi khi cập nhật dữ liệu" , err: error.message});
     }
   });
   static uploadAvatar = asyncHandler(async (req, res ) => {
