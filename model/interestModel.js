@@ -27,5 +27,6 @@ const interestSchema = new mongoose.Schema({
     price: {
         type:Number
     },
-})
+}
+)
 module.exports = mongoose.model("Interest", interestSchema);

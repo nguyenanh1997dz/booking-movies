@@ -4,10 +4,6 @@ const bookSchema = new mongoose.Schema({
   email: {
     type: String
   },
-  branch: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch'
-  },
   interest: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Interest'
@@ -19,7 +15,8 @@ const bookSchema = new mongoose.Schema({
     type: Number
   },
   discountValue: {
-    type: Number
+    type: Number,
+    default: 0
   },
   extras: [
     {

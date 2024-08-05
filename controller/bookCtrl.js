@@ -16,9 +16,6 @@ class BookController {
       const interest = await checkInterestStatus(newBook);
       checkDuplicateSeats(newBook, interest);
       interest.bookedSeats.push(...newBook.seats);
-      if (discountValue) {
-        newBook.discountValue = discountValue;
-      }
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
