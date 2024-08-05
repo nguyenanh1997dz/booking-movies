@@ -24,12 +24,6 @@ const contentSchema = new mongoose.Schema({
         type: Number,
         default: 0
     },
-    blog: {
-        type: [{
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'Blog'
-        }]
-    },
 
 })
 module.exports = mongoose.model("Content", contentSchema);

@@ -6,8 +6,9 @@ class ContentController {
         try {
             console.log(req.description)
             console.log(req.body)
+            console.log(req.body.blog)
             const newContent = await Content.create(req.body)
-            await Blog.findByIdAndUpdate(contents, { $push: { newContent: newContent._id } });
+            await Blog.findByIdAndUpdate(req.body.blog, { $push: { newContent: newContent._id } });
             return res.status(200).json({
                 message: "Tạo bài viết thành công",
                 data: newContent
@@ -116,11 +117,10 @@ class ContentController {
     static increaseHot = asyncHandler(async (req, res) => {
         const { id } = req.params;
         try {
-            // Tìm kiếm và cập nhật bài viết
             const updatedContent = await Content.findByIdAndUpdate(
                 id,
-                { $inc: { hot: 1 } }, // Tăng giá trị 'hot' lên 1
-                { new: true } // Trả về bản ghi đã được cập nhật
+                { $inc: { hot: 1 } }, 
+                { new: true } 
             );
 
             if (!updatedContent) {
