@@ -4,6 +4,10 @@ const bookSchema = new mongoose.Schema({
   email: {
     type: String
   },
+  movie: {
+    type: mongoose.Schema.Types.ObjectId,
+     ref: 'Movie'
+  },
   interest: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Interest'

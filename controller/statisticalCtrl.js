@@ -6,7 +6,7 @@ class StatisticalController {
   static movieRevenue = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
     const matchCondition = {
-        "payment.status": "Đã thanh toán",
+        "payment.status" :"Đã thanh toán"
       };
   
       if (startDate && endDate) {
@@ -29,18 +29,21 @@ class StatisticalController {
         { $unwind: "$interestDetails" },
         {
           $group: {
-            _id: "$interestDetails.movie",  // Nhóm theo ID của phim
-            totalRevenue: {
+            _id: "$interestDetails.movie",  
+             totalRevenue: {
+              $sum: "$price" 
+            },
+            totalTicketsRevenue: {
               $sum: {
-                $subtract: [
-                  { $multiply: [{ $size: "$seats" }, "$price"] }, 
-                  { $ifNull: ["$discountValue", 0] }
-                ],
-              },
+                $multiply: [{ $size: "$seats" }, "$interestDetails.price"]  
+              }
+            },
+             totalExtrasRevenue: {
+              $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] }  
             },
             totalTicketsSold: {
-              $sum: { $size: "$seats" },
-            },
+              $sum: { $size: "$seats" }  
+            }
           },
         },
         {
@@ -55,11 +58,13 @@ class StatisticalController {
         {
           $project: {
             _id: 0,
-            movie: "$movieDetails.name",
+            "movieDetails": 1,
             totalRevenue: 1,
-            totalTicketsSold: 1,
+            totalTicketsRevenue: 1,
+            totalExtrasRevenue: 1,
+            totalTicketsSold: 1
           },
-        },
+        }
       ]);
   
       console.log(result);
