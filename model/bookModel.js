@@ -18,6 +18,9 @@ const bookSchema = new mongoose.Schema({
   price: {
     type: Number
   },
+  discountValue: {
+    type: Number
+  },
   extras: [
     {
       itemId: {

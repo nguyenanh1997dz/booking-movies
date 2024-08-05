@@ -9,13 +9,16 @@ const sendEmail = require("../utils/sendMail");
 const axios = require("axios");
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
-    const { email } = req.body;
+    const { email ,discountValue} = req.body;
     try {
       validateInput(req);
       const newBook = new Book(req.body);
       const interest = await checkInterestStatus(newBook);
       checkDuplicateSeats(newBook, interest);
       interest.bookedSeats.push(...newBook.seats);
+      if (discountValue) {
+        newBook.discountValue = discountValue;
+      }
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
