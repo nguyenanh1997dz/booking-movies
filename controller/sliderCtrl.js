@@ -77,7 +77,7 @@ static deleteImageslider = asyncHandler(async (req, res) => {
   static updateSlider = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
-      let slider = await slider.findById(id);
+      let slider = await Slider.findById(id);
       if (!slider) {
         return res.status(404).json({ message: "Không tìm thấy slider" });
       }

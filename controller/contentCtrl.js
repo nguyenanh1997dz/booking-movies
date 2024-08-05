@@ -1,12 +1,13 @@
 const asyncHandler = require("express-async-handler");
 const Content = require("../model/contentModel")
-
+const Blog = require("../model/blogModel")
 class ContentController {
     static createContent = asyncHandler(async (req, res) => {
         try {
             console.log(req.description)
             console.log(req.body)
             const newContent = await Content.create(req.body)
+            await Blog.findByIdAndUpdate(contents, { $push: { newContent: newContent._id } });
             return res.status(200).json({
                 message: "Tạo bài viết thành công",
                 data: newContent
