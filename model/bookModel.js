@@ -62,7 +62,7 @@ bookSchema.pre(/^find/, function(next) {
       { path: 'movie' },
       { path: 'room', populate: { path: 'branch'} } 
     ]
-  }).populate('branch', 'name')
+  })
   next();
 });
 

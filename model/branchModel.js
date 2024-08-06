@@ -19,7 +19,5 @@ const branchSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Room'
     }]
-
-
 })
 module.exports = mongoose.model("Branch", branchSchema);

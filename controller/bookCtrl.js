@@ -98,6 +98,8 @@ class BookController {
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
     const { bookId } = req.query;
+    console.log(bookId);
+    
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
     for (const extra of book.extras) {
