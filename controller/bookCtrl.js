@@ -16,6 +16,7 @@ class BookController {
       const interest = await checkInterestStatus(newBook);
       checkDuplicateSeats(newBook, interest);
       interest.bookedSeats.push(...newBook.seats);
+      newBook.movie = interest.movie
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
