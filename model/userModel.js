@@ -14,8 +14,16 @@ const userSchema = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
+    },
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true,
+    },
+    googleImage: {
+      type: String
     },
     role: {
       type: String,
@@ -35,9 +43,7 @@ const userSchema = new mongoose.Schema(
       url: String,
       publicId : String
     },
-    refreshToken: {
-      type: String,
-    },
+   
     bookings: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Book'

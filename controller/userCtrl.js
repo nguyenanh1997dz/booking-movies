@@ -24,20 +24,13 @@ class UserController {
     if (findUser && findUser.isBlocked == true)
       res.status(403).json({ message: "Tài khoản đã bị khóa" });
     if (findUser && (await findUser.isPasswordMatched(password))) {
-      const refreshToken = jwt.sign(
-        { userId: findUser._id },
-        process.env.JWT_SECRET
-      );
-      res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: false,
-        path: "/",
-        sameSite: "strict",
-      });
+     
       const accessToken = jwt.sign(
         { userId: findUser._id },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
+<<<<<<< HEAD
+=======
       );
       const updateuser = await User.findByIdAndUpdate(
         findUser._id,
@@ -45,7 +38,9 @@ class UserController {
           refreshToken: refreshToken,
         },
         { new: true }
+>>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
       );
+     
       return res.status(200).json({
         accessToken: accessToken,
       });
@@ -56,6 +51,57 @@ class UserController {
       });
     }
   });
+<<<<<<< HEAD
+
+  static googleLogin = asyncHandler(async (req, res) => {
+    const { email, name, id : googleId, image } = req.body;
+
+  try {
+    let user = await User.findOne({ email });
+
+    if (user) {
+    
+      if (user.googleId === googleId) {
+        const accessToken = jwt.sign(
+          { userId: user._id },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+
+        return res.status(200).json({
+            accessToken
+           
+        });
+      } else if (user.googleId && user.googleId !== googleId) {
+        
+        return res.status(400).json({
+          status: false,
+          message: "Email này đã được sử dụng bởi tài khoản Google khác.",
+        });
+      } else {
+        
+        return res.status(409).json({
+          status: false,
+          message: "Email này đã được sử dụng. Bạn có muốn liên kết với tài khoản Google của bạn không?",
+        });
+      }
+    } else {
+
+      user = await User.create({
+        email,
+        googleId,
+        googleImage: image,
+        fullName: name
+      });
+
+      const accessToken = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+      res.status(200).json({
+        accessToken,
+=======
   static logout = asyncHandler(async (req, res) => {
     const cookie = req.cookies;
     if (!cookie?.refreshToken)
@@ -66,17 +112,23 @@ class UserController {
       res.clearCookie("refreshToken", {
         httpOnly: true,
         secure: true,
+>>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
       });
-      return res.sendStatus(204);
     }
-    await User.findOneAndUpdate({ refreshToken }, { refreshToken: "" });
-    res.clearCookie("refreshToken", {
-      httpOnly: true,
-      secure: true,
+  } catch (error) {
+    res.status(401).json({
+      status: false,
+      message: "Xác thực không thành công",
     });
-    res.sendStatus(204);
+  }
   });
+<<<<<<< HEAD
+
+ 
+  static getCurentUser = asyncHandler(async (req, res) =>{
+=======
   static getCurentUser = asyncHandler(async (req, res) => {
+>>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
     const { id } = req.user;
     const user = await User.findById(id);
     res.json(user);
@@ -190,6 +242,10 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
+<<<<<<< HEAD
+
+
+=======
   static refreshToken = asyncHandler(async (req, res) => {
     const refreshToken = req.cookies.refreshToken;
     console.log(refreshToken);
@@ -215,6 +271,7 @@ class UserController {
 
     return res.status(200).json({ accessToken: newAccessToken });
   });
+>>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
   static blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
