@@ -29,16 +29,6 @@ class UserController {
         { userId: findUser._id },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
-<<<<<<< HEAD
-=======
-      );
-      const updateuser = await User.findByIdAndUpdate(
-        findUser._id,
-        {
-          refreshToken: refreshToken,
-        },
-        { new: true }
->>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
       );
      
       return res.status(200).json({
@@ -51,7 +41,6 @@ class UserController {
       });
     }
   });
-<<<<<<< HEAD
 
   static googleLogin = asyncHandler(async (req, res) => {
     const { email, name, id : googleId, image } = req.body;
@@ -101,18 +90,6 @@ class UserController {
       );
       res.status(200).json({
         accessToken,
-=======
-  static logout = asyncHandler(async (req, res) => {
-    const cookie = req.cookies;
-    if (!cookie?.refreshToken)
-      throw new Error("không có refreshToken trong cookie");
-    const refreshToken = cookie.refreshToken;
-    const user = await User.findOne({ refreshToken });
-    if (!user) {
-      res.clearCookie("refreshToken", {
-        httpOnly: true,
-        secure: true,
->>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
       });
     }
   } catch (error) {
@@ -122,13 +99,9 @@ class UserController {
     });
   }
   });
-<<<<<<< HEAD
 
  
   static getCurentUser = asyncHandler(async (req, res) =>{
-=======
-  static getCurentUser = asyncHandler(async (req, res) => {
->>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
     const { id } = req.user;
     const user = await User.findById(id);
     res.json(user);
@@ -242,36 +215,8 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-<<<<<<< HEAD
 
 
-=======
-  static refreshToken = asyncHandler(async (req, res) => {
-    const refreshToken = req.cookies.refreshToken;
-    console.log(refreshToken);
-    if (!refreshToken) {
-      return res.status(403).json({
-        message: "Không có refreshToken trong cookie. Vui lòng đăng nhập lại",
-      });
-    }
-
-    const user = await User.findOne({ refreshToken });
-    if (!user) {
-      return res.status(403).json({
-        message:
-          "Không tìm thấy refreshToken trong cơ sở dữ liệu. Vui lòng đăng nhập lại",
-      });
-    }
-
-    const newAccessToken = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "10m" }
-    );
-
-    return res.status(200).json({ accessToken: newAccessToken });
-  });
->>>>>>> 4684d3ddb313352d4bd67142f4654269cd6335e4
   static blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {

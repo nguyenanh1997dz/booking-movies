@@ -129,7 +129,7 @@ class BookController {
       }
     }
     return res.json({
-      url: `${process.env.BASE_CLIENT_URL}/thankyou?id=${bookId}&result=0`,
+      url: `${process.env.BASE_CLIENT_URL}/thankyou/${bookId}`,
     });
   });
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
