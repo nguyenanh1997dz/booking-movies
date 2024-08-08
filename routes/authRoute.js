@@ -8,9 +8,8 @@ router.post("/register",UserController.createUser);
 
 router.post("/login", UserController.login);
 
-router.post("/logout", UserController.logout);
+router.post("/google-login", UserController.googleLogin);
 
-router.post("/refreshToken", UserController.refreshToken);
 
 router.get("/current-user",authMiddleware,UserController.getCurentUser)
 
