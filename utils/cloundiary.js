@@ -5,7 +5,7 @@ cloudinary.config({
   api_key: process.env.API_KEY,
   api_secret: process.env.SECRET_KEY,
 });
-console.log(123123);
+
 const cloudinaryUploadImg = (fileToUpload, folder = "products") => {
   return new Promise((resolve, reject) => {
     cloudinary.uploader.upload(fileToUpload, { folder }, (error, result) => {

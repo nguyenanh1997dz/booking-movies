@@ -4,9 +4,9 @@ const bookSchema = new mongoose.Schema({
   email: {
     type: String
   },
-  branch: {
+  movie: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Branch'
+     ref: 'Movie'
   },
   interest: {
     type: mongoose.Schema.Types.ObjectId,
@@ -17,6 +17,10 @@ const bookSchema = new mongoose.Schema({
   },
   price: {
     type: Number
+  },
+  discountValue: {
+    type: Number,
+    default: 0
   },
   extras: [
     {
@@ -58,7 +62,7 @@ bookSchema.pre(/^find/, function(next) {
       { path: 'movie' },
       { path: 'room', populate: { path: 'branch'} } 
     ]
-  }).populate('branch', 'name')
+  })
   next();
 });
 

@@ -9,6 +9,10 @@ const contentSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    title: {
+        type: String,
+        required: true,
+    },
     img: {
         type: Object
     },
@@ -19,7 +23,7 @@ const contentSchema = new mongoose.Schema({
     hot: {
         type: Number,
         default: 0
-    }
+    },
 
 })
 module.exports = mongoose.model("Content", contentSchema);

@@ -9,13 +9,14 @@ const sendEmail = require("../utils/sendMail");
 const axios = require("axios");
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
-    const { email } = req.body;
+    const { email ,discountValue} = req.body;
     try {
       validateInput(req);
       const newBook = new Book(req.body);
       const interest = await checkInterestStatus(newBook);
       checkDuplicateSeats(newBook, interest);
       interest.bookedSeats.push(...newBook.seats);
+      newBook.movie = interest.movie
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
@@ -98,6 +99,8 @@ class BookController {
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
     const { bookId } = req.query;
+    console.log(bookId);
+    
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
     for (const extra of book.extras) {

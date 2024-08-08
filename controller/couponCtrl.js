@@ -15,6 +15,10 @@ class CouponController {
       });
     }
   });
+  static getAll = asyncHandler(async (req, res) => {
+    const result = await Coupon.find({})
+    return res.status(200).json(result);
+  })
   static checkCode = asyncHandler(async (req, res) => {
     try {
       const { code, totalAmount } = req.body;
