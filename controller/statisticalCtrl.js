@@ -1,21 +1,19 @@
 const asyncHandler = require("express-async-handler");
 const Interest = require("../model/interestModel");
 const Book = require("../model/bookModel");
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 class StatisticalController {
   static movieRevenue = asyncHandler(async (req, res) => {
-    const { startDate, endDate } = req.query;
-    const matchCondition = {};
-
-    if (startDate && endDate) {
-      matchCondition.createdAt = {
-        $gte: new Date(startDate), // Ngày bắt đầu
-        $lte: new Date(endDate), // Ngày kết thúc
-      };
-    }
-
+    
+    const matchCondition = {
+       
+        createdAt: {
+          $gte: new Date("2024-07-10T00:00:00Z"),
+          $lt: new Date("2024-08-31T23:59:59Z"),
+        }
+    };
     const result = await Book.aggregate([
-      { $match: matchCondition },
+      {$match: matchCondition},
       {
         $lookup: {
           from: "interests",
@@ -43,10 +41,15 @@ class StatisticalController {
             $sum: { $size: "$seats" },
           },
           totaldiscountValue: {
-            $sum: "$discountValue",
+            $sum: {
+              $multiply: [
+                "$price", // Giá gốc của hóa đơn
+                { $divide: ["$discountValue", 100] } 
+              ]
+            }
           },
           totalTicketsSold: {
-            $sum: 1, // Tổng số vé đã bán, tính theo số lượng hóa đơn
+            $sum: 1,
           },
         },
       },
@@ -61,7 +64,7 @@ class StatisticalController {
       { $unwind: "$movieDetails" },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           movie: "$movieDetails.name",
           totalRevenue: 1,
           totalTicketsRevenue: 1,
@@ -108,7 +111,7 @@ class StatisticalController {
       { $unwind: "$roomDetails" },
       {
         $lookup: {
-          from: "branches", 
+          from: "branches",
           localField: "roomDetails.branch",
           foreignField: "_id",
           as: "branchDetails",
@@ -117,10 +120,10 @@ class StatisticalController {
       { $unwind: "$branchDetails" },
       {
         $group: {
-          _id: "$branchDetails._id", 
-          branchName: { $first: "$branchDetails.name" }, 
+          _id: "$branchDetails._id",
+          branchName: { $first: "$branchDetails.name" },
           totalRevenue: {
-            $sum: "$price", 
+            $sum: "$price",
           },
           totalTicketsRevenue: {
             $sum: {
@@ -131,7 +134,7 @@ class StatisticalController {
             $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] },
           },
           totalTicketsSold: {
-            $sum: 1, 
+            $sum: 1,
           },
         },
       },
@@ -150,16 +153,14 @@ class StatisticalController {
     return res.json(result);
   });
   static branchMovieRevenueDetail = asyncHandler(async (req, res) => {
-    const { startDate, endDate } = req.query;  
-    const {branchId} = req.params
-    console.log(branchId);
-    
-    const matchCondition = {
-    };
+    const { startDate, endDate } = req.query;
+    const { branchId } = req.params;
+
+    const matchCondition = {};
     if (startDate && endDate) {
       matchCondition.createdAt = {
-        $gte: new Date(startDate),  
-        $lte: new Date(endDate)    
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
       };
     }
     const result = await Book.aggregate([
@@ -193,31 +194,31 @@ class StatisticalController {
       { $unwind: "$branchDetails" },
       {
         $match: {
-          "branchDetails._id": new mongoose.Types.ObjectId(branchId)  // Lọc theo chi nhánh
-        }
+          "branchDetails._id": new mongoose.Types.ObjectId(branchId),
+        },
       },
       {
         $group: {
           _id: {
             branch: "$branchDetails._id",
-            movie: "$interestDetails.movie"
+            movie: "$interestDetails.movie",
           },
           branchName: { $first: "$branchDetails.name" },
           movieName: { $first: "$interestDetails.movie" },
           totalRevenue: {
-            $sum: "$price"
+            $sum: "$price",
           },
           totalTicketsRevenue: {
             $sum: {
-              $multiply: [{ $size: "$seats" }, "$interestDetails.price"]
-            }
+              $multiply: [{ $size: "$seats" }, "$interestDetails.price"],
+            },
           },
           totalExtrasRevenue: {
-            $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] }
+            $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] },
           },
           totalTicketsSold: {
-            $sum: 1
-          }
+            $sum: 1,
+          },
         },
       },
       {
@@ -231,13 +232,13 @@ class StatisticalController {
       { $unwind: "$movieDetails" },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           branchName: 1,
           movie: "$movieDetails.name",
           totalRevenue: 1,
           totalTicketsRevenue: 1,
           totalExtrasRevenue: 1,
-          totalTicketsSold: 1
+          totalTicketsSold: 1,
         },
       },
     ]);

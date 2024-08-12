@@ -365,7 +365,6 @@ class InterestController {
   });
   static updateInterest = asyncHandler(async (req, res) => {
     const { bookedSeats } = req.body;
-    console.log(bookedSeats);
     try {
       const interestId = req.params.id;
       const interest = await Interest.findById(interestId);
@@ -403,19 +402,10 @@ class InterestController {
           vietnamTime <= interest.endTime
         ) {
           interest.status = "Đang diễn ra";
-          console.log("giờ hiện tại", vietnamTime.toISOString());
-          console.log("giờ phim chiếu", interest.startTime.toISOString());
-          console.log(interest.status);
         } else if (vietnamTime > interest.endTime) {
           interest.status = "Đã kết thúc";
-          console.log("giờ hiện tại", vietnamTime.toISOString());
-          console.log("giờ phim chiếu", interest.startTime.toISOString());
-          console.log(interest.status);
         } else {
           interest.status = "Chưa bắt đầu";
-          console.log("giờ hiện tại", vietnamTime.toISOString());
-          console.log("giờ phim chiếu", interest.startTime.toISOString());
-          console.log(interest.status);
         }
         await interest.save();
       }

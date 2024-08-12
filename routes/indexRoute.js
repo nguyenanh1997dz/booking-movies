@@ -17,6 +17,7 @@ const contentRoute = require('./contentRoute')
 const sliderRoute = require('./sliderRoute')
 const couponRoute = require('./couponRoute')
 const statisticalRoute = require('./statisticalRoute')
+const ticketRoute = require('./ticketRoute')
 router.use("/api/v1/auth", authRoute);
 router.use("/api/v1/movie", movieRoute);
 router.use("/api/v1/genre", genreRoute);
@@ -33,4 +34,5 @@ router.use("/api/v1/content", contentRoute);
 router.use("/api/v1/slider", sliderRoute);
 router.use("/api/v1/coupon", couponRoute);
 router.use("/api/v1/statistical", statisticalRoute);
+router.use("/api/v1/ticket", ticketRoute);
 module.exports = router;

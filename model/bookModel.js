@@ -8,6 +8,7 @@ const bookSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
      ref: 'Movie'
   },
+  uuid: { type: String, unique: true },
   interest: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Interest'
