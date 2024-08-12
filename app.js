@@ -21,11 +21,13 @@ app.listen(PORT, () => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
 app.use(cors({
-    origin: process.env.BASE_CLIENT_URL,
+    origin: [process.env.BASE_CLIENT_URL, 'http://localhost:3000'],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
 
 // Middleware Morgan
 app.use(morgan("dev"));

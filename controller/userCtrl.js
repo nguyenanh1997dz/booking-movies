@@ -100,7 +100,6 @@ class UserController {
   }
   });
 
- 
   static getCurentUser = asyncHandler(async (req, res) =>{
     const { id } = req.user;
     const user = await User.findById(id);
@@ -215,8 +214,6 @@ class UserController {
       res.status(500).json({ message: "Error fetching users" });
     }
   });
-
-
   static blockUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
     try {
