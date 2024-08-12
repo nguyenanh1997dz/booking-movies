@@ -351,15 +351,109 @@ class BookController {
     return res.json(result[0] || {});
   })
   static userTicket = asyncHandler(async (req, res) => {
- 
-    if (!id) {
-      return res.status(404).json({message: "Thiếu thông tin"})
-    }    
+    const { id } = req.user;
+    const email = await User.findById(id)
     const result = await Book.aggregate([
       {
         $match: {
           movie: { $exists: true, $ne: "" },
-          _id : new mongoose.Types.ObjectId(id) 
+          email : email
+        },
+      },
+      {
+        $lookup: {
+          from: "movies",
+          localField: "movie",
+          foreignField: "_id",
+          as: "movieResult",
+        },
+      },
+      { $unwind: "$movieResult" },
+
+      {
+        $lookup: {
+          from: "interests",
+          localField: "interest",
+          foreignField: "_id",
+          as: "interestResult",
+        },
+      },
+      { $unwind: "$interestResult" },
+
+      {
+        $lookup: {
+          from: "rooms",
+          localField: "interestResult.room",
+          foreignField: "_id",
+          as: "roomResult",
+        },
+      },
+      { $unwind: "$roomResult" },
+
+      {
+        $lookup: {
+          from: "branches",
+          localField: "roomResult.branch",
+          foreignField: "_id",
+          as: "branchResult",
+        },
+      },
+      { $unwind: "$branchResult" },
+
+      {
+        $project: {
+          _id: 1,
+          movieInfo: {
+            name: "$movieResult.name",
+            img: "$movieResult.image.url",
+          },
+          showDetails: {
+            cinemaName: "$branchResult.name",
+            address: "$branchResult.address",
+            screenRoom: "$roomResult.name",
+            timeStart: "$interestResult.startTime",
+            timeEnd: "$interestResult.endTime",
+            status: "$interestResult.status",
+          },
+          email: 1,
+          extras: 1,
+          payment: 1,
+          seats: 1,
+          dateBooked: "$createdAt",
+          totalAmount: "$price",
+          discountValue: {
+            $cond: {
+              if: { $eq: ["$discountValue", 0] },
+              then: "Không sử dụng",
+              else: "$discountValue",
+            },
+          },
+          discountAmount: {
+            $cond: {
+              if: { $eq: ["$discountValue", 0] },
+              then: 0,
+              else: {
+                $multiply: [
+                  "$price",
+                  {
+                    $divide: ["$discountValue", 100],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    ]);
+    return res.json(result);
+  })
+  static ticketByUuid = asyncHandler(async (req, res) => {
+    const { uuid } = req.params
+    const result = await Book.aggregate([
+      {
+        $match: {
+          movie: { $exists: true, $ne: "" },
+          uuid : uuid
         },
       },
       {
