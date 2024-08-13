@@ -11,7 +11,8 @@ const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 const {authenticator,totp}  = require("otplib");
 
-authenticator.options = { step: 300 };
+authenticator.options = { step: 300};
+authenticator.options = { digits: 4 };
 const generateOtp = () => {
   return authenticator.generate(process.env.KEY_SECRET_OTP);
 };
@@ -809,6 +810,8 @@ class BookController {
     const { email } = req.body;
     if (!email) throw new Error("Không có email");
    const otp = generateOtp()
+   console.log(otp, typeof otp);
+   
     const html = `
     <p>Xin chào ${email},</p>
     <p>Dưới đây là mã OTP của bạn để tra cứu thông tin vé</p>
