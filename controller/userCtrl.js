@@ -182,7 +182,7 @@ class UserController {
   static reset_Password = asyncHandler(async (req, res) => {
     const { otp, password, email } = req.body;
     if (!otp || !password || !email) {
-      return res.status(401).json({
+      return res.status(400).json({
         message: "Thiếu thông tin.",
       });
     }

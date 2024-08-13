@@ -4,8 +4,10 @@ const BookController = require("../controller/bookCtrl");
 
 const router = express.Router();
 
-router.get("/", BookController.allTicket) // tất cả vé , trả về mảng 
-router.get("/:id", BookController.ticketById) // chi tiết vé theo id của vé , trả về object
-router.get("/user/all", authMiddleware,BookController.userTicket) // tất cả vé theo user ( yêu cầu đăng nhập), trả về mảng 
-router.get("/uuid/:uuid",BookController.ticketByUuid) // tra cứu theo uuid của vé ( trang tra cứu), trả về object
+router.get("/", BookController.allTicket) 
+router.get("/:id", BookController.ticketById) 
+router.get("/user/all", authMiddleware,BookController.userTicket)
+router.get("/uuid/:uuid",BookController.ticketByUuid) 
+router.post("/verify-email", BookController.verifyEmail); // Thêm route mới
+router.post("/verify-otp", BookController.verifyOtp); // Thêm route xác minh OTP
 module.exports = router; 

@@ -9,6 +9,16 @@ const sendEmail = require("../utils/sendMail");
 const axios = require("axios");
 const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
+const {authenticator,totp}  = require("otplib");
+
+authenticator.options = { step: 300 };
+const generateOtp = () => {
+  return authenticator.generate(process.env.KEY_SECRET_OTP);
+};
+const verifyOtp = (otp) => {
+  return authenticator.check(otp, process.env.KEY_SECRET_OTP);
+};
+
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
     const { email, discountValue } = req.body;
@@ -648,6 +658,178 @@ class BookController {
       },
     ]);
     return res.json(result[0] || {});
+  });
+
+  static verifyOtp = asyncHandler(async (req, res) => {
+    const { otp, email } = req.body;
+    if (!otp || !email) {
+      return res.status(400).json({
+        message: "Thiếu thông tin.",
+      });
+    }
+    const isValid = verifyOtp(otp);
+    
+    if (!isValid) {
+      return res.status(400).json({ message: "Mã OTP không hợp lệ" });
+    }
+    const result = await Book.aggregate([
+      {
+        $match: {
+          email: email
+        },
+      },
+      {
+        $lookup: {
+          from: "movies",
+          localField: "movie",
+          foreignField: "_id",
+          as: "movieResult",
+        },
+      },
+      { $unwind: "$movieResult" },
+
+      {
+        $lookup: {
+          from: "interests",
+          localField: "interest",
+          foreignField: "_id",
+          as: "interestResult",
+        },
+      },
+      { $unwind: "$interestResult" },
+
+      {
+        $lookup: {
+          from: "rooms",
+          localField: "interestResult.room",
+          foreignField: "_id",
+          as: "roomResult",
+        },
+      },
+      { $unwind: "$roomResult" },
+
+      {
+        $lookup: {
+          from: "branches",
+          localField: "roomResult.branch",
+          foreignField: "_id",
+          as: "branchResult",
+        },
+      },
+      { $unwind: "$branchResult" },
+
+      // Expand the extras array for processing if it exists
+      { $unwind: { path: "$extras", preserveNullAndEmptyArrays: true } },
+
+      // Lookup for extra items
+      {
+        $lookup: {
+          from: "foods", // Collection where extra details are stored
+          localField: "extras.itemId",
+          foreignField: "_id",
+          as: "extraDetails",
+        },
+      },
+      { $unwind: { path: "$extraDetails", preserveNullAndEmptyArrays: true } },
+
+      // Group by the main document and accumulate extra details
+      {
+        $group: {
+          _id: "$_id",
+          uuid: { $first: "$uuid" },
+          movieInfo: {
+            $first: {
+              name: "$movieResult.name",
+              img: "$movieResult.image.url",
+            },
+          },
+          showDetails: {
+            $first: {
+              cinemaName: "$branchResult.name",
+              address: "$branchResult.address",
+              screenRoom: "$roomResult.name",
+              timeStart: "$interestResult.startTime",
+              timeEnd: "$interestResult.endTime",
+              status: "$interestResult.status",
+              ticketPrice: "$interestResult.price",
+            },
+          },
+          email: { $first: "$email" },
+          extras: {
+            $push: {
+              quantity: "$extras.quantity",
+              name: "$extraDetails.name",
+              price: "$extras.price",
+            },
+          },
+          payment: { $first: "$payment" },
+          seats: { $first: "$seats" },
+          dateBooked: { $first: "$createdAt" },
+          totalAmount: { $first: "$price" },
+          discountValue: {
+            $first: {
+              $cond: {
+                if: { $eq: ["$discountValue", 0] },
+                then: "Không sử dụng",
+                else: "$discountValue",
+              },
+            },
+          },
+        },
+      },
+
+      // Ensure extras is an empty array if no extras exist
+      {
+        $addFields: {
+          extras: {
+            $cond: {
+              if: {
+                $and: [
+                  { $eq: [{ $size: "$extras" }, 1] },
+                  {
+                    $eq: [
+                      { $type: { $arrayElemAt: ["$extras", 0] } },
+                      "object",
+                    ],
+                  },
+                ],
+              },
+              then: [],
+              else: "$extras",
+            },
+          },
+        },
+      },
+    ]);
+
+    return res.json(result)
+  });
+
+  static verifyEmail = asyncHandler(async (req, res) => {
+    const { email } = req.body;
+    if (!email) throw new Error("Không có email");
+   const otp = generateOtp()
+    const html = `
+    <p>Xin chào ${email},</p>
+    <p>Dưới đây là mã OTP của bạn để tra cứu thông tin vé</p>
+    <h2 style="background-color: #f4f4f4; padding: 10px; display:inline">${otp}</h2>
+    <p>Nếu không phải là bạn vui lòng hiên hệ với chúng tôi</p>
+    <p>Trân trọng,</p>
+    <p>Đội ngũ hỗ trợ của chúng tôi</p>
+`;
+    const data = {
+      to: email,
+      subject: "Xác minh tra cứu vé",
+      html: html,
+    };
+    try {
+      await sendEmail(data);
+      return res.json({
+        message: "Email chứa mã OTP đã được gửi đến địa chỉ email của bạn.",
+      });
+    } catch (error) {
+      throw new Error("Đã xảy ra lỗi khi gửi email.");
+    }
   });
 }
 
