@@ -216,6 +216,7 @@ class BookController {
       {
         $group: {
           _id: "$_id",
+          uuid: { $first: "$uuid" },
           movieInfo: {
             $first: {
               name: "$movieResult.name",
@@ -351,6 +352,7 @@ class BookController {
       {
         $group: {
           _id: "$_id",
+          uuid: { $first: "$uuid" },
           movieInfo: {
             $first: {
               name: "$movieResult.name",
@@ -484,6 +486,7 @@ class BookController {
       {
         $group: {
           _id: "$_id",
+          uuid: { $first: "$uuid" },
           movieInfo: {
             $first: {
               name: "$movieResult.name",
