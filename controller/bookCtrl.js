@@ -8,7 +8,7 @@ const paymentMethodsAray = ["Tiền mặt", "VNPAY", "ZALOPAY"];
 const sendEmail = require("../utils/sendMail");
 const axios = require("axios");
 const { default: mongoose } = require("mongoose");
-const { v4: uuidv4 } = require('uuid');
+const { v4: uuidv4 } = require("uuid");
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
     const { email, discountValue } = req.body;
@@ -159,12 +159,6 @@ class BookController {
   static allTicket = asyncHandler(async (req, res) => {
     const result = await Book.aggregate([
       {
-        $match: {
-          movie: { $exists: true, $ne: "" },
-        },
-      },
-
-      {
         $lookup: {
           from: "movies",
           localField: "movie",
@@ -204,46 +198,83 @@ class BookController {
       },
       { $unwind: "$branchResult" },
 
+      // Expand the extras array for processing if it exists
+      { $unwind: { path: "$extras", preserveNullAndEmptyArrays: true } },
+
+      // Lookup for extra items
       {
-        $project: {
-          _id: 1,
+        $lookup: {
+          from: "foods", // Collection where extra details are stored
+          localField: "extras.itemId",
+          foreignField: "_id",
+          as: "extraDetails",
+        },
+      },
+      { $unwind: { path: "$extraDetails", preserveNullAndEmptyArrays: true } },
+
+      // Group by the main document and accumulate extra details
+      {
+        $group: {
+          _id: "$_id",
           movieInfo: {
-            name: "$movieResult.name",
-            img: "$movieResult.image.url",
-          },
-          showDetails: {
-            cinemaName: "$branchResult.name",
-            address: "$branchResult.address",
-            screenRoom: "$roomResult.name",
-            timeStart: "$interestResult.startTime",
-            timeEnd: "$interestResult.endTime",
-            status: "$interestResult.status",
-          },
-          email: 1,
-          extras: 1,
-          payment: 1,
-          seats: 1,
-          dateBooked: "$createdAt",
-          totalAmount: "$price",
-          discountValue: {
-            $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: "Không sử dụng",
-              else: "$discountValue",
+            $first: {
+              name: "$movieResult.name",
+              img: "$movieResult.image.url",
             },
           },
-          discountAmount: {
+          showDetails: {
+            $first: {
+              cinemaName: "$branchResult.name",
+              address: "$branchResult.address",
+              screenRoom: "$roomResult.name",
+              timeStart: "$interestResult.startTime",
+              timeEnd: "$interestResult.endTime",
+              status: "$interestResult.status",
+              ticketPrice: "$interestResult.price",
+            },
+          },
+          email: { $first: "$email" },
+          extras: {
+            $push: {
+              quantity: "$extras.quantity",
+              name: "$extraDetails.name",
+              price: "$extras.price",
+            },
+          },
+          payment: { $first: "$payment" },
+          seats: { $first: "$seats" },
+          dateBooked: { $first: "$createdAt" },
+          totalAmount: { $first: "$price" },
+          discountValue: {
+            $first: {
+              $cond: {
+                if: { $eq: ["$discountValue", 0] },
+                then: "Không sử dụng",
+                else: "$discountValue",
+              },
+            },
+          },
+        },
+      },
+
+      // Ensure extras is an empty array if no extras exist
+      {
+        $addFields: {
+          extras: {
             $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: 0,
-              else: {
-                $multiply: [
-                  "$price",
+              if: {
+                $and: [
+                  { $eq: [{ $size: "$extras" }, 1] },
                   {
-                    $divide: ["$discountValue", 100],
+                    $eq: [
+                      { $type: { $arrayElemAt: ["$extras", 0] } },
+                      "object",
+                    ],
                   },
                 ],
               },
+              then: [],
+              else: "$extras",
             },
           },
         },
@@ -252,15 +283,14 @@ class BookController {
     return res.json(result);
   });
   static ticketById = asyncHandler(async (req, res) => {
-    const id = req.params.id
+    const id = req.params.id;
     if (!id) {
-      return res.status(404).json({message: "Thiếu thông tin"})
-    }    
+      return res.status(404).json({ message: "Thiếu thông tin" });
+    }
     const result = await Book.aggregate([
       {
         $match: {
-          movie: { $exists: true, $ne: "" },
-          _id : new mongoose.Types.ObjectId(id) 
+          _id: new mongoose.Types.ObjectId(id),
         },
       },
       {
@@ -303,61 +333,97 @@ class BookController {
       },
       { $unwind: "$branchResult" },
 
+      // Expand the extras array for processing if it exists
+      { $unwind: { path: "$extras", preserveNullAndEmptyArrays: true } },
+
+      // Lookup for extra items
       {
-        $project: {
-          _id: 1,
+        $lookup: {
+          from: "foods", // Collection where extra details are stored
+          localField: "extras.itemId",
+          foreignField: "_id",
+          as: "extraDetails",
+        },
+      },
+      { $unwind: { path: "$extraDetails", preserveNullAndEmptyArrays: true } },
+
+      // Group by the main document and accumulate extra details
+      {
+        $group: {
+          _id: "$_id",
           movieInfo: {
-            name: "$movieResult.name",
-            img: "$movieResult.image.url",
-          },
-          showDetails: {
-            cinemaName: "$branchResult.name",
-            address: "$branchResult.address",
-            screenRoom: "$roomResult.name",
-            timeStart: "$interestResult.startTime",
-            timeEnd: "$interestResult.endTime",
-            status: "$interestResult.status",
-          },
-          email: 1,
-          extras: 1,
-          payment: 1,
-          seats: 1,
-          dateBooked: "$createdAt",
-          totalAmount: "$price",
-          discountValue: {
-            $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: "Không sử dụng",
-              else: "$discountValue",
+            $first: {
+              name: "$movieResult.name",
+              img: "$movieResult.image.url",
             },
           },
-          discountAmount: {
+          showDetails: {
+            $first: {
+              cinemaName: "$branchResult.name",
+              address: "$branchResult.address",
+              screenRoom: "$roomResult.name",
+              timeStart: "$interestResult.startTime",
+              timeEnd: "$interestResult.endTime",
+              status: "$interestResult.status",
+              ticketPrice: "$interestResult.price",
+            },
+          },
+          email: { $first: "$email" },
+          extras: {
+            $push: {
+              quantity: "$extras.quantity",
+              name: "$extraDetails.name",
+              price: "$extras.price",
+            },
+          },
+          payment: { $first: "$payment" },
+          seats: { $first: "$seats" },
+          dateBooked: { $first: "$createdAt" },
+          totalAmount: { $first: "$price" },
+          discountValue: {
+            $first: {
+              $cond: {
+                if: { $eq: ["$discountValue", 0] },
+                then: "Không sử dụng",
+                else: "$discountValue",
+              },
+            },
+          },
+        },
+      },
+
+      // Ensure extras is an empty array if no extras exist
+      {
+        $addFields: {
+          extras: {
             $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: 0,
-              else: {
-                $multiply: [
-                  "$price",
+              if: {
+                $and: [
+                  { $eq: [{ $size: "$extras" }, 1] },
                   {
-                    $divide: ["$discountValue", 100],
+                    $eq: [
+                      { $type: { $arrayElemAt: ["$extras", 0] } },
+                      "object",
+                    ],
                   },
                 ],
               },
+              then: [],
+              else: "$extras",
             },
           },
         },
       },
     ]);
     return res.json(result[0] || {});
-  })
+  });
   static userTicket = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const email = await User.findById(id)
+    const user = await User.findById(id);
     const result = await Book.aggregate([
       {
         $match: {
-          movie: { $exists: true, $ne: "" },
-          email : email
+          email: user?.email,
         },
       },
       {
@@ -400,60 +466,97 @@ class BookController {
       },
       { $unwind: "$branchResult" },
 
+      // Expand the extras array for processing if it exists
+      { $unwind: { path: "$extras", preserveNullAndEmptyArrays: true } },
+
+      // Lookup for extra items
       {
-        $project: {
-          _id: 1,
+        $lookup: {
+          from: "foods", // Collection where extra details are stored
+          localField: "extras.itemId",
+          foreignField: "_id",
+          as: "extraDetails",
+        },
+      },
+      { $unwind: { path: "$extraDetails", preserveNullAndEmptyArrays: true } },
+
+      // Group by the main document and accumulate extra details
+      {
+        $group: {
+          _id: "$_id",
           movieInfo: {
-            name: "$movieResult.name",
-            img: "$movieResult.image.url",
-          },
-          showDetails: {
-            cinemaName: "$branchResult.name",
-            address: "$branchResult.address",
-            screenRoom: "$roomResult.name",
-            timeStart: "$interestResult.startTime",
-            timeEnd: "$interestResult.endTime",
-            status: "$interestResult.status",
-          },
-          email: 1,
-          extras: 1,
-          payment: 1,
-          seats: 1,
-          dateBooked: "$createdAt",
-          totalAmount: "$price",
-          discountValue: {
-            $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: "Không sử dụng",
-              else: "$discountValue",
+            $first: {
+              name: "$movieResult.name",
+              img: "$movieResult.image.url",
             },
           },
-          discountAmount: {
+          showDetails: {
+            $first: {
+              cinemaName: "$branchResult.name",
+              address: "$branchResult.address",
+              screenRoom: "$roomResult.name",
+              timeStart: "$interestResult.startTime",
+              timeEnd: "$interestResult.endTime",
+              status: "$interestResult.status",
+              ticketPrice: "$interestResult.price",
+            },
+          },
+          email: { $first: "$email" },
+          extras: {
+            $push: {
+              quantity: "$extras.quantity",
+              name: "$extraDetails.name",
+              price: "$extras.price",
+            },
+          },
+          payment: { $first: "$payment" },
+          seats: { $first: "$seats" },
+          dateBooked: { $first: "$createdAt" },
+          totalAmount: { $first: "$price" },
+          discountValue: {
+            $first: {
+              $cond: {
+                if: { $eq: ["$discountValue", 0] },
+                then: "Không sử dụng",
+                else: "$discountValue",
+              },
+            },
+          },
+        },
+      },
+
+      // Ensure extras is an empty array if no extras exist
+      {
+        $addFields: {
+          extras: {
             $cond: {
-              if: { $eq: ["$discountValue", 0] },
-              then: 0,
-              else: {
-                $multiply: [
-                  "$price",
+              if: {
+                $and: [
+                  { $eq: [{ $size: "$extras" }, 1] },
                   {
-                    $divide: ["$discountValue", 100],
+                    $eq: [
+                      { $type: { $arrayElemAt: ["$extras", 0] } },
+                      "object",
+                    ],
                   },
                 ],
               },
+              then: [],
+              else: "$extras",
             },
           },
         },
       },
     ]);
     return res.json(result);
-  })
+  });
   static ticketByUuid = asyncHandler(async (req, res) => {
-    const { uuid } = req.params
+    const { uuid } = req.params;
     const result = await Book.aggregate([
       {
         $match: {
           movie: { $exists: true, $ne: "" },
-          uuid : uuid
+          uuid: uuid,
         },
       },
       {
@@ -542,7 +645,7 @@ class BookController {
       },
     ]);
     return res.json(result[0] || {});
-  })
+  });
 }
 
 function validateInput(req) {
