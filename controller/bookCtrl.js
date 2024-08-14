@@ -10,9 +10,11 @@ const axios = require("axios");
 const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 const {authenticator,totp}  = require("otplib");
-
-authenticator.options = { step: 300};
-authenticator.options = { digits: 4 };
+authenticator.options = {
+  step: 300,  // Thời gian sống của mã OTP (giây)
+  digits: 4,  // Số chữ số của mã OTP
+  window: 1   // Số khoảng thời gian trước và sau thời điểm hiện tại mà OTP có thể được chấp nhận
+};
 const generateOtp = () => {
   return authenticator.generate(process.env.KEY_SECRET_OTP);
 };
@@ -22,7 +24,12 @@ const verifyOtp = (otp) => {
 
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
-    const { email, discountValue } = req.body;
+    const { email, discountValue ,seats } = req.body;
+    if (!Array.isArray(seats) || seats.length === 0) {
+      return res.status(400).json({
+        message: "Thiếu thông tin hoặc seats không phải là mảng hợp lệ",
+      });
+    }
     try {
       validateInput(req);
       const newBook = new Book(req.body);
@@ -671,7 +678,18 @@ class BookController {
     const isValid = verifyOtp(otp);
     
     if (!isValid) {
-      return res.status(400).json({ message: "Mã OTP không hợp lệ" });
+      const { delta } = authenticator.verify(otp, process.env.KEY_SECRET_OTP);
+      
+      let errorMessage = "Mã OTP không hợp lệ";
+      if (delta) {
+        if (delta > 0) {
+          errorMessage = `Mã OTP hết hạn, còn lại ${delta} giây`;
+        } else {
+          errorMessage = `Mã OTP đã hết hạn`;
+        }
+      }
+  
+      return res.status(400).json({ message: errorMessage });
     }
     const result = await Book.aggregate([
       {
@@ -810,7 +828,6 @@ class BookController {
     const { email } = req.body;
     if (!email) throw new Error("Không có email");
    const otp = generateOtp()
-   console.log(otp, typeof otp);
    
     const html = `
     <p>Xin chào ${email},</p>
