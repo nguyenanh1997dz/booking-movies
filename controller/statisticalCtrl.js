@@ -4,9 +4,6 @@ const Book = require("../model/bookModel");
 const mongoose = require("mongoose");
 class StatisticalController {
   static chartStatistical = asyncHandler(async (req, res) => {
-    const matchCondition = {
-      "payment.status": "Đã Thanh Toán",
-    };
     const result = await Book.aggregate([
       {
         $match: {
@@ -29,7 +26,7 @@ class StatisticalController {
       {
         $group: {
           _id: {
-            day: { $dateToString: { format: "%d/%m/%Y", date: "$createdAt" } },
+            day: { $dateToString: { format: "%m/%d/%Y", date: "$createdAt" } },
           },
           totalTicketPrice: {
             $sum: {
@@ -87,19 +84,12 @@ class StatisticalController {
 
     return res.json(result);
   });
-  static moviesRevenue = asyncHandler(async (req, res) => {
+  static revenue = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
-    const matchCondition = {};
+   
 
-    if (startDate && endDate) {
-      matchCondition.createdAt = {
-        $gte: new Date(startDate), // Ngày bắt đầu
-        $lte: new Date(endDate), // Ngày kết thúc
-      };
-    }
-
-    const result = await Book.aggregate([
-      { $match: matchCondition },
+    const result = await Book.aggregate(
+      [
       {
         $lookup: {
           from: "interests",
