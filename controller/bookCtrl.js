@@ -41,7 +41,7 @@ class BookController {
       newBook.movie = interest.movie;
       newBook.uuid = uuidv4();
       const totalPrice = discountValue > 0 
-    ? price + (price * discountValue / 100) : price;
+    ? newBook.price + (newBook.price * discountValue / 100) : newBook.price;
       newBook.totalPrice = totalPrice
       await interest.save();
       await newBook.save();
