@@ -5,12 +5,14 @@ const mongoose = require("mongoose");
 class StatisticalController {
   static chartStatistical = asyncHandler(async (req, res) => {
     const matchCondition = {
-     "payment.status" : 'Đã Thanh Toán'
+      "payment.status": "Đã Thanh Toán",
     };
     const result = await Book.aggregate([
-      {$match: {
-        "payment.status": "Đã thanh toán"
-      }},
+      {
+        $match: {
+          "payment.status": "Đã thanh toán",
+        },
+      },
       {
         $unwind: { path: "$extras", preserveNullAndEmptyArrays: true },
       },
@@ -85,7 +87,7 @@ class StatisticalController {
 
     return res.json(result);
   });
-  static branchRevenue = asyncHandler(async (req, res) => {
+  static moviesRevenue = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
     const matchCondition = {};
 
@@ -157,6 +159,50 @@ class StatisticalController {
       },
     ]);
 
+    return res.json(result);
+  });
+  static ticketSold = asyncHandler(async (req, res) => {
+    const result = await Book.aggregate([
+      {
+        $match: {
+          "payment.status": "Đã thanh toán",
+        },
+      },
+      {
+        $lookup: {
+          from: "interests",
+          localField: "interest",
+          foreignField: "_id",
+          as: "interestDetails",
+        },
+      },
+      { $unwind: "$interestDetails" },
+      {
+        $lookup: {
+          from: "movies",
+          localField: "movie",
+          foreignField: "_id",
+          as: "movieDetails",
+        },
+      },
+      { $unwind: "$movieDetails" },
+      {
+        $group: {
+          _id: "$movieDetails._id",
+          movieName: { $first: "$movieDetails.name" },
+          totalTicketsSold: {
+            $sum: 1,
+          },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          movieName: 1,
+          totalTicketsSold: 1,
+        },
+      },
+    ]);
     return res.json(result);
   });
   static branchMovieRevenueDetail = asyncHandler(async (req, res) => {
