@@ -3,17 +3,17 @@ const Interest = require("../model/interestModel");
 const Book = require("../model/bookModel");
 const mongoose = require("mongoose");
 class StatisticalController {
-  static movieRevenue = asyncHandler(async (req, res) => {
-    
+  static chartStatistical = asyncHandler(async (req, res) => {
     const matchCondition = {
-       
-        createdAt: {
-          $gte: new Date("2024-07-10T00:00:00Z"),
-          $lt: new Date("2024-08-31T23:59:59Z"),
-        }
+     "payment.status" : 'Đã Thanh Toán'
     };
     const result = await Book.aggregate([
-      {$match: matchCondition},
+      {$match: {
+        "payment.status": "Đã thanh toán"
+      }},
+      {
+        $unwind: { path: "$extras", preserveNullAndEmptyArrays: true },
+      },
       {
         $lookup: {
           from: "interests",
@@ -23,56 +23,63 @@ class StatisticalController {
         },
       },
       { $unwind: "$interestDetails" },
+
       {
         $group: {
-          _id: "$interestDetails.movie",
-          totalRevenue: {
-            $sum: "$price",
+          _id: {
+            day: { $dateToString: { format: "%d/%m/%Y", date: "$createdAt" } },
           },
-          totalTicketsRevenue: {
+          totalTicketPrice: {
             $sum: {
               $multiply: [{ $size: "$seats" }, "$interestDetails.price"],
             },
           },
-          totalExtrasRevenue: {
+
+          finalAmount: { $sum: "$totalPrice" },
+          totalExtrasPrice: {
             $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] },
           },
-          totalSeatsSold: {
-            $sum: { $size: "$seats" },
-          },
-          totaldiscountValue: {
+          totalDiscountAmount: {
             $sum: {
-              $multiply: [
-                "$price", // Giá gốc của hóa đơn
-                { $divide: ["$discountValue", 100] } 
-              ]
-            }
+              $cond: {
+                if: { $eq: ["$discountValue", 0] },
+                then: 0,
+                else: {
+                  $multiply: [
+                    {
+                      $add: [
+                        "$price",
+                        { $multiply: ["$extras.quantity", "$extras.price"] },
+                      ],
+                    },
+                    { $divide: ["$discountValue", 100] },
+                  ],
+                },
+              },
+            },
           },
-          totalTicketsSold: {
-            $sum: 1,
+          totalAmount: {
+            $sum: {
+              $add: [
+                "$price",
+                { $multiply: ["$extras.quantity", "$extras.price"] },
+              ],
+            },
           },
         },
       },
-      {
-        $lookup: {
-          from: "movies",
-          localField: "_id",
-          foreignField: "_id",
-          as: "movieDetails",
-        },
-      },
-      { $unwind: "$movieDetails" },
       {
         $project: {
-          _id: 1,
-          movie: "$movieDetails.name",
-          totalRevenue: 1,
-          totalTicketsRevenue: 1,
-          totalExtrasRevenue: 1,
-          totalTicketsSold: 1,
-          totalSeatsSold: 1,
-          totaldiscountValue: 1,
+          _id: 0,
+          day: "$_id.day",
+          totalTicketPrice: 1,
+          totalExtrasPrice: 1,
+          totalDiscountAmount: 1,
+          finalAmount: 1,
         },
+      },
+      {
+        $sort: { day: 1 },
       },
     ]);
 
