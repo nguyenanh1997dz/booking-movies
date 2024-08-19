@@ -40,6 +40,9 @@ class BookController {
       interest.bookedSeats.push(...newBook.seats);
       newBook.movie = interest.movie;
       newBook.uuid = uuidv4();
+      const totalPrice = discountValue > 0 
+    ? price + (price * discountValue / 100) : price;
+      newBook.totalPrice = totalPrice
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
