@@ -27,7 +27,12 @@ const verifyOtp = (otp) => {
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
     const { email, discountValue ,seats } = req.body;
-  
+    if (!Array.isArray(seats) || !seats.length) {
+      return res.status(500).json({
+        message: "Không có thông tin ghế ngồi",
+      });
+    }
+    
     try {
       validateInput(req);
       const newBook = new Book(req.body);
@@ -36,9 +41,6 @@ class BookController {
       interest.bookedSeats.push(...newBook.seats);
       newBook.movie = interest.movie;
       newBook.uuid = uuidv4();
-      const totalPrice = discountValue > 0 
-    ? newBook.price + (newBook.price * discountValue / 100) : newBook.price;
-      newBook.totalPrice = totalPrice
       await interest.save();
       await newBook.save();
       const redirectUrl = await savePaymentDetails(
