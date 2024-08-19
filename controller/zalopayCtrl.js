@@ -3,39 +3,36 @@ const axios = require("axios");
 const CryptoJS = require("crypto-js");
 const qs = require("qs");
 const moment = require("moment");
+
+
 const config = {
   app_id: "2553",
   key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
   key2: "kLtgPl8HHhfvMuDHPwKfgfsY4Ydm9eIz",
   endpoint: "https://sb-openapi.zalopay.vn/v2/create",
 };
-
+const formatTransID = (transID) => transID.split('_')[1];
 class ZaloPayController {
   static createPayment = asyncHandler(async (req, res) => {
-    const { orderId, email, amount } = req.body;    
-    console.log(orderId,email, amount);
-    
+    const { orderId, email, amount } = req.query;    
+
     const embed_data = {
       //sau khi hoàn tất thanh toán sẽ đi vào link này (thường là link web thanh toán thành công của mình)
       redirecturl:
-        "https://c5e4-2405-4802-9113-2da0-6ccd-2f83-ed34-514f.ngrok-free.app/api/v1/zalopay/redirect-from-zalopay",
-    };
-    const transID = Math.floor(Math.random() * 1000000);
-
+        `${process.env.BASE_SERVER_URL}/api/v1/zalopay/redirect-from-zalopay`,
+    };  
     const items = [];
     
     const order = {
       app_id: config.app_id,
-      app_trans_id: `${moment().format('YYMMDD')}_${transID}`, // translation missing: vi.docs.shared.sample_code.comments.app_trans_id
-      app_user: orderId,
+      app_trans_id: `${moment().format('YYMMDD')}_${orderId}`,
+      app_user: "",
       app_time: Date.now(), // miliseconds
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
       amount: +amount,
-      //khi thanh toán xong, zalopay server sẽ POST đến url này để thông báo cho server của mình
-      //Chú ý: cần dùng ngrok để public url thì Zalopay Server mới call đến được
-      callback_url: "https://b074-1-53-37-194.ngrok-free.app/callback",
-      description: `Lazada - Payment for the order #${transID}`,
+      callback_url: `${process.env.BASE_SERVER_URL}/api/v1/zalopay/callback`,
+      description: `Thanh toán cho đơn hàng${orderId}`,
       bank_code: "",
     };
 
@@ -57,30 +54,26 @@ class ZaloPayController {
     order.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
 
     try {
-      const result = await axios.post(config.endpoint, null, { params: order });
-
-      return res.status(200).json(result.data);
+      const result = await axios.post(config.endpoint, null, { params: order });      
+      return res.status(200).json({url: result.data.order_url,qr_code: result.data.qr_code});
     } catch (error) {
       console.log(error);
     }
   });
   static callback = asyncHandler(async (req, res) => {
-    console.log("Đang chạy callback");
     let result = {};
     try {
       let dataStr = req.body.data;
       let reqMac = req.body.mac;
-      console.log(dataStr, reqMac);
       let mac = CryptoJS.HmacSHA256(dataStr, config.key2).toString();
       if (reqMac !== mac) {
         result.return_code = -1;
         result.return_message = "mac not equal";
       } else {
-        const result = await axios.post(config.endpoint, null, {
-          params: order,
-        });
-        console.log(result);
-
+        const orderJSON = JSON.parse(dataStr);
+        const orderId = formatTransID(orderJSON?.app_trans_id)
+        const url = `${process.env.BASE_SERVER_URL}/api/v1/book/vnpay?bookId=${orderId}&method=ZALOPAY`;
+        await axios.post(url);
         result.return_code = 1;
         result.return_message = "success";
       }
@@ -151,14 +144,21 @@ class ZaloPayController {
       "|" +
       data.status;
     let checksum = CryptoJS.HmacSHA256(checksumData, config.key2).toString();
+    const orderId = formatTransID(data.apptransid)
 
     if (checksum != data.checksum) {
-      res.json(checksum);
+      const url = `${process.env.BASE_CLIENT_URL}`
+      return res.redirect(url);
     } else {
-      console.log(456);
-      console.log(data);
-      // kiểm tra xem đã nhận được callback hay chưa, nếu chưa thì tiến hành gọi API truy vấn trạng thái thanh toán của đơn hàng để lấy kết quả cuối cùng
-      res.json(checksum);
+      if (data.status === '1') {
+        const url = `${process.env.BASE_CLIENT_URL}/thankyou/${orderId}`
+        return  res.redirect(url);
+      }else{
+        const url = `${process.env.BASE_SERVER_URL}/api/v1/book/cancel?bookId=${orderId}`;
+        const response = await axios.post(url);
+        return res.redirect(response.data.url)
+      }
+
     }
   });
 }

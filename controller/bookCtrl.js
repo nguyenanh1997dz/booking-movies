@@ -27,11 +27,7 @@ const verifyOtp = (otp) => {
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
     const { email, discountValue ,seats } = req.body;
-    if (!Array.isArray(seats) || seats.length === 0) {
-      return res.status(400).json({
-        message: "Thiếu thông tin hoặc seats không phải là mảng hợp lệ",
-      });
-    }
+  
     try {
       validateInput(req);
       const newBook = new Book(req.body);
@@ -124,9 +120,8 @@ class BookController {
     return res.json(book);
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
-    const { bookId } = req.query;
+    const { bookId , method} = req.query;
     console.log(bookId);
-
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
     for (const extra of book.extras) {
@@ -145,7 +140,7 @@ class BookController {
       });
     }
     if (book.payment.status !== "Đã thanh toán") {
-      book.payment.method = "VNPAY";
+      book.payment.method = method;
       book.payment.status = "Đã thanh toán";
       await book.save();
       if (user) {
@@ -961,6 +956,9 @@ async function savePaymentDetails(
   }
   if (paymentMethod === "VNPAY") {
     return `/api/v1/vnpay?amount=${newBook.price}&bankCode=${paymentMethod}&orderId=${newBook._id}`;
+  }
+  if (paymentMethod === "ZALOPAY") {
+    return `/api/v1/zalopay?amount=${newBook.price}&bankCode=${paymentMethod}&orderId=${newBook._id}`;
   }
   if (paymentMethod === "ZALOPAY") {
     return `/api/v1/zalopay?amount=${newBook.price}&orderId=${newBook._id}&email=${newBook.email}`;

@@ -71,11 +71,11 @@ class VNPAYController {
     let signed = hmac.update(new Buffer.from(signData, "utf-8")).digest("hex");
     if (secureHash === signed) {
       if (vnp_Params.vnp_TransactionStatus !== "00") {
-        const url = `http://localhost:5000/api/v1/book/cancel?bookId=${vnp_Params.vnp_TxnRef}`;
+        const url = `${process.env.BASE_SERVER_URL}/api/v1/book/cancel?bookId=${vnp_Params.vnp_TxnRef}`;
         const response = await axios.post(url);
         return res.redirect(response.data.url)
       }
-        const url = `http://localhost:5000/api/v1/book/vnpay?bookId=${vnp_Params.vnp_TxnRef}`;
+        const url = `${process.env.BASE_SERVER_URL}/api/v1/book/vnpay?bookId=${vnp_Params.vnp_TxnRef}&method=VNPAY`;
         const response = await axios.post(url);
       return res.redirect(response.data.url)
     } else {
