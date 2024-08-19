@@ -2,9 +2,7 @@ const nodemailer = require("nodemailer");
 
 const sendEmail = async (data) => {
   const transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false, // or true if you're using SSL
+    service: 'gmail', // Sử dụng service của Gmail
     auth: {
       user: process.env.USER_EMAIL,
       pass: process.env.PASS_EMAIL,
@@ -15,6 +13,7 @@ const sendEmail = async (data) => {
     from: '"426 👻" <no-reply@gmail.com>',
     to: data.to,
     subject: data.subject,
+    attachDataUrls: true,
     text: data.text,
     html: data.html,
   };

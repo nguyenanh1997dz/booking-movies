@@ -10,6 +10,8 @@ const axios = require("axios");
 const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 const {authenticator,totp}  = require("otplib");
+const QRCode = require('qrcode');
+
 authenticator.options = {
   step: 300,  // Thời gian sống của mã OTP (giây)
   digits: 4,  // Số chữ số của mã OTP
@@ -889,6 +891,25 @@ class BookController {
       throw new Error("Đã xảy ra lỗi khi gửi email.");
     }
   });
+
+  static testQr = asyncHandler(async (req, res)  => {
+    let img = await QRCode.toDataURL('https://cinema429.vercel.app/tracuu/ceb07c3c-bbdb-418e-8b6a-28ba81e3bb25');
+    const emailData = {
+      to: 'nguyenanh1997dz@gmail.com',
+      subject: 'Your QR Code',
+      text: 'Please find the QR code below.',
+      html: `
+        <p>Please find the QR code below:</p>
+        <img src="${img}" alt="QR Code"/>
+      `
+    };
+
+  
+    await sendEmail(emailData);
+
+
+    return res.send("oke")
+  })
 }
 
 function validateInput(req) {

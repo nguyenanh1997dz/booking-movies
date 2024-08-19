@@ -23,7 +23,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 app.use(cors({
-    origin: [process.env.BASE_CLIENT_URL, 'http://localhost:3000',"https://cinema429-git-dashboad-uhpnats-projects.vercel.app"],
+    origin: [process.env.BASE_CLIENT_URL, 'http://localhost:3000'],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
 }));
