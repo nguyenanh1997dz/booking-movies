@@ -177,7 +177,8 @@ class BookController {
     }
   });
   static allTicket = asyncHandler(async (req, res) => {
-    const result = await Book.aggregate([
+    const result = await Book.aggregate( 
+      [
       {
         $lookup: {
           from: "movies",
@@ -266,15 +267,8 @@ class BookController {
           seats: { $first: "$seats" },
           dateBooked: { $first: "$createdAt" },
           totalAmount: { $first: "$price" },
-          discountValue: {
-            $first: {
-              $cond: {
-                if: { $eq: ["$discountValue", 0] },
-                then: "Không sử dụng",
-                else: "$discountValue",
-              },
-            },
-          },
+          discountValue: { $first: "$discountValue" },
+          totalPrice: { $first: "$totalPrice" },
         },
       },
 
@@ -299,7 +293,7 @@ class BookController {
             },
           },
         },
-      },
+      }
     ]);
     return res.json(result);
   });
@@ -308,7 +302,8 @@ class BookController {
     if (!id) {
       return res.status(404).json({ message: "Thiếu thông tin" });
     }
-    const result = await Book.aggregate([
+    const result = await Book.aggregate( 
+      [
       {
         $match: {
           _id: new mongoose.Types.ObjectId(id),
@@ -402,15 +397,8 @@ class BookController {
           seats: { $first: "$seats" },
           dateBooked: { $first: "$createdAt" },
           totalAmount: { $first: "$price" },
-          discountValue: {
-            $first: {
-              $cond: {
-                if: { $eq: ["$discountValue", 0] },
-                then: "Không sử dụng",
-                else: "$discountValue",
-              },
-            },
-          },
+          discountValue: { $first: "$discountValue" },
+          totalPrice: { $first: "$totalPrice" },
         },
       },
 
@@ -435,14 +423,15 @@ class BookController {
             },
           },
         },
-      },
+      }
     ]);
     return res.json(result[0] || {});
   });
   static userTicket = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const user = await User.findById(id);
-    const result = await Book.aggregate([
+    const result = await Book.aggregate( 
+      [
       {
         $match: {
           email: user?.email,
@@ -536,15 +525,8 @@ class BookController {
           seats: { $first: "$seats" },
           dateBooked: { $first: "$createdAt" },
           totalAmount: { $first: "$price" },
-          discountValue: {
-            $first: {
-              $cond: {
-                if: { $eq: ["$discountValue", 0] },
-                then: "Không sử dụng",
-                else: "$discountValue",
-              },
-            },
-          },
+          discountValue: { $first: "$discountValue" },
+          totalPrice: { $first: "$totalPrice" },
         },
       },
 
@@ -569,7 +551,7 @@ class BookController {
             },
           },
         },
-      },
+      }
     ]);
     return res.json(result);
   });
@@ -670,15 +652,8 @@ class BookController {
           seats: { $first: "$seats" },
           dateBooked: { $first: "$createdAt" },
           totalAmount: { $first: "$price" },
-          discountValue: {
-            $first: {
-              $cond: {
-                if: { $eq: ["$discountValue", 0] },
-                then: "Không sử dụng",
-                else: "$discountValue",
-              },
-            },
-          },
+          discountValue: { $first: "$discountValue" },
+          totalPrice: { $first: "$totalPrice" },
         },
       },
 
@@ -703,7 +678,7 @@ class BookController {
             },
           },
         },
-      },
+      }
     ]);
     return res.json(result[0] || {});
   });
