@@ -81,15 +81,12 @@ class StatisticalController {
         $sort: { day: 1 },
       },
     ]);
-
     return res.json(result);
   });
   static revenue = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
-   
 
-    const result = await Book.aggregate(
-      [
+    const result = await Book.aggregate([
       {
         $lookup: {
           from: "interests",
@@ -190,6 +187,48 @@ class StatisticalController {
           _id: 0,
           movieName: 1,
           totalTicketsSold: 1,
+        },
+      },
+    ]);
+    return res.json(result);
+  });
+  static seatSold = asyncHandler(async (req, res) => {
+    const result = await Book.aggregate([
+      {
+        $match: {
+          "payment.status": "Đã thanh toán",
+        },
+      },
+      {
+        $lookup: {
+          from: "interests",
+          localField: "interest",
+          foreignField: "_id",
+          as: "interestDetails",
+        },
+      },
+      { $unwind: "$interestDetails" },
+      {
+        $lookup: {
+          from: "movies",
+          localField: "movie",
+          foreignField: "_id",
+          as: "movieDetails",
+        },
+      },
+      { $unwind: "$movieDetails" },
+      {
+        $group: {
+          _id: "$movieDetails._id",
+          movieName: { $first: "$movieDetails.name" },
+          totalSeats: { $sum: { $size: "$seats" } },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          movieName: 1,
+          totalSeats: 1,
         },
       },
     ]);
