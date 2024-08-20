@@ -148,51 +148,7 @@ class StatisticalController {
 
     return res.json(result);
   });
-  static ticketSold = asyncHandler(async (req, res) => {
-    const result = await Book.aggregate([
-      {
-        $match: {
-          "payment.status": "Đã thanh toán",
-        },
-      },
-      {
-        $lookup: {
-          from: "interests",
-          localField: "interest",
-          foreignField: "_id",
-          as: "interestDetails",
-        },
-      },
-      { $unwind: "$interestDetails" },
-      {
-        $lookup: {
-          from: "movies",
-          localField: "movie",
-          foreignField: "_id",
-          as: "movieDetails",
-        },
-      },
-      { $unwind: "$movieDetails" },
-      {
-        $group: {
-          _id: "$movieDetails._id",
-          movieName: { $first: "$movieDetails.name" },
-          totalTicketsSold: {
-            $sum: 1,
-          },
-        },
-      },
-      {
-        $project: {
-          _id: 0,
-          movieName: 1,
-          totalTicketsSold: 1,
-        },
-      },
-    ]);
-    return res.json(result);
-  });
-  static seatSold = asyncHandler(async (req, res) => {
+  static movieSalesSummary = asyncHandler(async (req, res) => {
     const result = await Book.aggregate([
       {
         $match: {
@@ -222,18 +178,29 @@ class StatisticalController {
           _id: "$movieDetails._id",
           movieName: { $first: "$movieDetails.name" },
           totalSeats: { $sum: { $size: "$seats" } },
+          totalTicketPrice: {
+            $sum: {
+              $multiply: [{ $size: "$seats" }, "$interestDetails.price"],
+            },
+          },
+          totalTicketsSold: {
+            $sum: 1,
+          },
         },
       },
       {
         $project: {
-          _id: 0,
+          _id: 1,
           movieName: 1,
           totalSeats: 1,
+          totalTicketPrice: 1,
+          totalTicketsSold: 1,
         },
       },
     ]);
     return res.json(result);
   });
+
   static branchMovieRevenueDetail = asyncHandler(async (req, res) => {
     const { startDate, endDate } = req.query;
     const { branchId } = req.params;
