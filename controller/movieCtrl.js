@@ -5,8 +5,10 @@ const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
 const User = require("../model/userModel");
 const { default: mongoose } = require("mongoose");
+const moment = require("moment/moment");
 
-class MovieController {
+
+ class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
     try {
       const movie = Movie.create(req.body);
@@ -23,7 +25,6 @@ class MovieController {
   static uploadImgMovie = asyncHandler(async (req, res) => {
     const img = await UploadImageService.upLoadImage(req, res, "movies");
 
-    console.log(img);
     res.json({
       message: "Thành công",
       data: img,
@@ -139,7 +140,7 @@ class MovieController {
     const { id } = req.params;
     try {
       let movie = await Movie.findById(id);
-      console.log(movie);
+
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
@@ -155,7 +156,7 @@ class MovieController {
     try {
       const topMovies = await Movie.find().sort({ view: -1 }).limit(10);
 
-      console.log(topMovies);
+
 
       res.status(200).json({
         message: "Thành công",
@@ -174,7 +175,7 @@ class MovieController {
 
     try {
       const movie = await Movie.findById(movieId);
-      log
+
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
@@ -239,6 +240,13 @@ class MovieController {
       }},
       { $unwind: "$ratings" },
       {
+        $addFields: {
+          "ratings.formattedDate": {
+            $dateToString: { format: "%d-%m-%Y", date: "$ratings.createdAt" }
+          }
+        }
+      },
+      {
         $lookup: {
           from: "users",
           localField: "ratings.postedby",
@@ -257,6 +265,7 @@ class MovieController {
               star: "$ratings.star",
               comment: "$ratings.comment",
               user: "$user.fullName",
+              date: "$ratings.formattedDate"
             },
           },
           totalRated: { $sum: 1 },

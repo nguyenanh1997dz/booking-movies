@@ -46,6 +46,11 @@ const movieSchema = new mongoose.Schema(
         star: Number,
         comment: String,
         postedby: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+        createdAt: {
+          type: Date,
+          default: Date.now,
+        },
+
       },
     ],
     totalrating: {
