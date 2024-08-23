@@ -177,6 +177,7 @@ class BookController {
     }
   });
   static allTicket = asyncHandler(async (req, res) => {
+    const {limit = 5} = req.query
     const result = await Book.aggregate( 
       [
       {
@@ -293,6 +294,12 @@ class BookController {
             },
           },
         },
+      },
+      {
+        $sort: { dateBooked: -1 } 
+      },
+      {
+        $limit: +limit
       }
     ]);
     return res.json(result);

@@ -3,12 +3,13 @@ const UploadImageService = require("../service/uploadImage");
 const asyncHandler = require("express-async-handler");
 const Movie = require("../model/movieModel");
 const Genre = require("../model/genreModel");
-const { request } = require("express");
+const User = require("../model/userModel");
+const { default: mongoose } = require("mongoose");
 
 class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
     try {
-      const movie = Movie.create(req.body)
+      const movie = Movie.create(req.body);
       res.status(200).json({
         message: "Tạo phim thành công",
         data: movie,
@@ -27,17 +28,17 @@ class MovieController {
       message: "Thành công",
       data: img,
     });
-  })
+  });
 
   static deleteImageMovie = asyncHandler(async (req, res) => {
-    const { id } = req.params
+    const { id } = req.params;
     let formatId = "movies/" + id;
-    await UploadImageService.deleteImage(formatId)
+    await UploadImageService.deleteImage(formatId);
     res.json({
       message: "Thành công",
       data: "img",
     });
-  })
+  });
 
   static getAllMovie = asyncHandler(async (req, res) => {
     let {
@@ -90,7 +91,7 @@ class MovieController {
       movie: movie,
       currentPage: page,
       totalPages,
-      totalCount
+      totalCount,
     });
   });
 
@@ -126,13 +127,11 @@ class MovieController {
       await Movie.findOneAndDelete({ _id: movieId });
       res.send("xóa phim thành công");
     } catch (error) {
-      res
-        .status(500)
-        .json({
-          success: false,
-          message: "Lỗi xóa phim",
-          error: error.message,
-        });
+      res.status(500).json({
+        success: false,
+        message: "Lỗi xóa phim",
+        error: error.message,
+      });
     }
   });
 
@@ -140,7 +139,7 @@ class MovieController {
     const { id } = req.params;
     try {
       let movie = await Movie.findById(id);
-      console.log(movie)
+      console.log(movie);
       if (!movie) {
         return res.status(404).json({ message: "Không tìm thấy bộ phim" });
       }
@@ -154,13 +153,10 @@ class MovieController {
 
   static getTopMovies = asyncHandler(async (req, res) => {
     try {
-      const topMovies = await Movie.find()
-        .sort({ view: -1 })
-        .limit(10)
+      const topMovies = await Movie.find().sort({ view: -1 }).limit(10);
 
-  
       console.log(topMovies);
-  
+
       res.status(200).json({
         message: "Thành công",
         data: topMovies,
@@ -172,6 +168,111 @@ class MovieController {
       });
     }
   });
+  static reviewMovies = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const { movieId, star, comment } = req.body;
 
+    try {
+      const movie = await Movie.findById(movieId);
+      log
+      if (!movie) {
+        return res.status(404).json({ message: "Không tìm thấy bộ phim" });
+      }
+      let alreadyRated = movie.ratings.find(
+        (rating) => rating.postedby.toString() === id.toString()
+      );
+      if (alreadyRated) {
+        const updateRating = await Movie.updateOne(
+          {
+            ratings: { $elemMatch: alreadyRated },
+          },
+          {
+            $set: { "ratings.$.star": +star, "ratings.$.comment": comment },
+          },
+          {
+            new: true,
+          }
+        );
+      } else {
+        const rateMovie = await Movie.findByIdAndUpdate(
+          movieId,
+          {
+            $push: {
+              ratings: {
+                star: +star,
+                comment: comment,
+                postedby: id,
+              },
+            },
+          },
+          {
+            new: true,
+          }
+        );
+      }
+      const getallratings = await Movie.findById(movieId);
+      let totalRating = getallratings.ratings.length;
+      let ratingsum = getallratings.ratings
+        .map((item) => item.star)
+        .reduce((prev, curr) => prev + curr, 0);
+      let actualRating = Math.round((ratingsum / totalRating) * 2) / 2;
+      let countRatings = getallratings.ratings.length || 0
+
+      let finalMovie = await Movie.findByIdAndUpdate(
+        movieId,
+        {
+          totalrating: actualRating,
+          countRating: countRatings
+        },
+        { new: true }
+      );
+      res.json(finalMovie);
+    } catch (error) {
+      throw new Error(error);
+    }
+  });
+  static getMovieReviewDetail = asyncHandler(async (req, res) => {
+    const { movieId } = req.params;
+    const result = await Movie.aggregate([
+      {$match:{
+        _id: new mongoose.Types.ObjectId(movieId)
+      }},
+      { $unwind: "$ratings" },
+      {
+        $lookup: {
+          from: "users",
+          localField: "ratings.postedby",
+          foreignField: "_id",
+          as: "user",
+        },
+      },
+      { $unwind: "$user" },
+      {
+        $group: {
+          _id: "$_id",
+          totalStars: { $first: "$totalrating" },
+          movie: { $first: "$name" },
+          reviews: {
+            $push: {
+              star: "$ratings.star",
+              comment: "$ratings.comment",
+              user: "$user.fullName",
+            },
+          },
+          totalRated: { $sum: 1 },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          movie: 1,
+          reviews: 1,
+          totalStars: 1,
+          totalRated: 1,
+        },
+      },
+    ]);
+    return res.json(result[0] || {});
+  });
 }
 module.exports = MovieController;

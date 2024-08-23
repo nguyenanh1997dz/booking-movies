@@ -12,4 +12,6 @@ router.delete("/:id", MovieController.deleteMovie)
 router.post("/img", uploadPhoto.single("image"), imgResize, MovieController.uploadImgMovie)
 router.get("/top/top-movies", MovieController.getTopMovies)
 router.delete("/img/:id", MovieController.deleteImageMovie)
+router.post("/add-review", authMiddleware, MovieController.reviewMovies)
+router.get("/get-review/:movieId", authMiddleware, MovieController.getMovieReviewDetail)
 module.exports = router;
