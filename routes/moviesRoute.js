@@ -13,5 +13,6 @@ router.post("/img", uploadPhoto.single("image"), imgResize, MovieController.uplo
 router.get("/top/top-movies", MovieController.getTopMovies)
 router.delete("/img/:id", MovieController.deleteImageMovie)
 router.post("/add-review", authMiddleware, MovieController.reviewMovies)
-router.get("/get-review/:movieId", authMiddleware, MovieController.getMovieReviewDetail)
+router.get("/get-review/:movieId", MovieController.getMovieReviewDetail)
+router.put("/comment/like", authMiddleware, MovieController.likeComment)
 module.exports = router;

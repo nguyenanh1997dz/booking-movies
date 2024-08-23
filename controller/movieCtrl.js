@@ -7,8 +7,7 @@ const User = require("../model/userModel");
 const { default: mongoose } = require("mongoose");
 const moment = require("moment/moment");
 
-
- class MovieController {
+class MovieController {
   static createMovie = asyncHandler(async (req, res) => {
     try {
       const movie = Movie.create(req.body);
@@ -156,8 +155,6 @@ const moment = require("moment/moment");
     try {
       const topMovies = await Movie.find().sort({ view: -1 }).limit(10);
 
-
-
       res.status(200).json({
         message: "Thành công",
         data: topMovies,
@@ -217,13 +214,13 @@ const moment = require("moment/moment");
         .map((item) => item.star)
         .reduce((prev, curr) => prev + curr, 0);
       let actualRating = Math.round((ratingsum / totalRating) * 2) / 2;
-      let countRatings = getallratings.ratings.length || 0
+      let countRatings = getallratings.ratings.length || 0;
 
       let finalMovie = await Movie.findByIdAndUpdate(
         movieId,
         {
           totalrating: actualRating,
-          countRating: countRatings
+          countRating: countRatings,
         },
         { new: true }
       );
@@ -235,16 +232,24 @@ const moment = require("moment/moment");
   static getMovieReviewDetail = asyncHandler(async (req, res) => {
     const { movieId } = req.params;
     const result = await Movie.aggregate([
-      {$match:{
-        _id: new mongoose.Types.ObjectId(movieId)
-      }},
-      { $unwind: "$ratings" },
+      {
+        $match: {
+          _id: new mongoose.Types.ObjectId(movieId),
+        },
+      },
+      {
+        $unwind: "$ratings",
+      },
+      // Add a formatted date field to each rating
       {
         $addFields: {
           "ratings.formattedDate": {
-            $dateToString: { format: "%d-%m-%Y", date: "$ratings.createdAt" }
-          }
-        }
+            $dateToString: {
+              format: "%Y-%m-%d %H:%M:%S",
+              date: "$ratings.createdAt",
+            },
+          },
+        },
       },
       {
         $lookup: {
@@ -255,33 +260,91 @@ const moment = require("moment/moment");
         },
       },
       { $unwind: "$user" },
+      // Group by movie _id, collecting review details and counting star ratings
       {
         $group: {
           _id: "$_id",
-          totalStars: { $first: "$totalrating" },
-          movie: { $first: "$name" },
+          movieName: {$first: "$name"},
           reviews: {
             $push: {
+              _id: "$ratings._id",
               star: "$ratings.star",
               comment: "$ratings.comment",
               user: "$user.fullName",
-              date: "$ratings.formattedDate"
+              date: "$ratings.formattedDate",
+              like: "$ratings.likes",
+              dislike: "$ratings.dislikes",
+              likedBy: "$ratings.likedBy",
+              dislikedBy: "$ratings.dislikedBy",
             },
           },
-          totalRated: { $sum: 1 },
+          starCounts: {
+            $push: "$ratings.star",
+          },
+        },
+      },
+      // Calculate the count for each star rating
+      {
+        $addFields: {
+          starCounts: {
+            $arrayToObject: {
+              $map: {
+                input: [
+                  { star: 1 },
+                  { star: 2 },
+                  { star: 3 },
+                  { star: 4 },
+                  { star: 5 },
+                ],
+                as: "s",
+                in: {
+                  k: { $concat: ["star", { $toString: "$$s.star" }] },
+                  v: {
+                    $size: {
+                      $filter: {
+                        input: "$starCounts",
+                        as: "star",
+                        cond: { $eq: ["$$star", "$$s.star"] },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
         },
       },
       {
         $project: {
-          _id: 1,
-          movie: 1,
           reviews: 1,
-          totalStars: 1,
-          totalRated: 1,
+          movieName:1,
+          starCounts: 1,
+          likeBy:1
         },
       },
     ]);
     return res.json(result[0] || {});
   });
+  static likeComment = asyncHandler(async (req, res) => {
+    const { id } = req.user;
+    const { commentId ,movieId , action } = req.body;
+    const comment = await Movie.findOne(
+      { _id: movieId, 'ratings._id': commentId },
+      { 'ratings.$': 1 }
+    );
+    if (!comment) {
+      return res.status(404).json({ message: "Không tìm thấy comment" }); 
+    }
+    const isUserLikedComment = (comment.ratings[0].likedBy).includes(id)
+    const isUserDislikedComment = (comment.ratings[0].dislikedBy).includes(id)
+    let update = {};
+    if (action === 'like') {
+      if (isUserLikedComment) {
+
+      }
+    }
+    
+    return res.json(comment[0])
+  } )
 }
 module.exports = MovieController;
