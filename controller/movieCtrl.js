@@ -264,7 +264,7 @@ class MovieController {
       {
         $group: {
           _id: "$_id",
-          movieName: {$first: "$name"},
+          movieName: { $first: "$name" },
           reviews: {
             $push: {
               _id: "$ratings._id",
@@ -317,34 +317,82 @@ class MovieController {
       {
         $project: {
           reviews: 1,
-          movieName:1,
+          movieName: 1,
           starCounts: 1,
-          likeBy:1
+          likeBy: 1,
         },
       },
     ]);
     return res.json(result[0] || {});
   });
-  static likeComment = asyncHandler(async (req, res) => {
+  static updateCommentReaction = asyncHandler(async (req, res) => {
     const { id } = req.user;
-    const { commentId ,movieId , action } = req.body;
-    const comment = await Movie.findOne(
-      { _id: movieId, 'ratings._id': commentId },
-      { 'ratings.$': 1 }
-    );
-    if (!comment) {
-      return res.status(404).json({ message: "Không tìm thấy comment" }); 
-    }
-    const isUserLikedComment = (comment.ratings[0].likedBy).includes(id)
-    const isUserDislikedComment = (comment.ratings[0].dislikedBy).includes(id)
-    let update = {};
-    if (action === 'like') {
-      if (isUserLikedComment) {
+    const { commentId, movieId, action } = req.body;
 
+    const comment = await Movie.findOne(
+      { _id: movieId, "ratings._id": commentId },
+      { "ratings.$": 1 }
+    );
+
+    if (!comment) {
+      return res.status(404).json({ message: "Không tìm thấy comment" });
+    }
+
+    const isUserLikedComment = comment.ratings[0].likedBy.includes(id);
+    const isUserDislikedComment = comment.ratings[0].dislikedBy.includes(id);
+
+    let update = {};
+    let reaction
+    if (action === "like") {
+      if (isUserLikedComment) {
+        // Nếu người dùng đã thích, hủy thích
+        update = {
+          $pull: { "ratings.$.likedBy": id },
+          $inc: { "ratings.$.likes": -1 },
+        };
+        reaction = "dislike"
+      } else {
+        // Nếu người dùng chưa thích
+        update = {
+          $addToSet: { "ratings.$.likedBy": id },
+          $inc: { "ratings.$.likes": 1 },
+        };
+        reaction = "like"
+        if (isUserDislikedComment) {
+          // Nếu người dùng đã ghét, bỏ ghét
+          update.$pull = { "ratings.$.dislikedBy": id };
+          update.$inc = { ...update.$inc, "ratings.$.dislikes": -1 };
+        }
+      }
+    } else if (action === "dislike") {
+      if (isUserDislikedComment) {
+        // Nếu người dùng đã ghét, hủy ghét
+        update = {
+          $pull: { "ratings.$.dislikedBy": id },
+          $inc: { "ratings.$.dislikes": -1 },
+        };
+        reaction = "bỏ dislike"
+      } else {
+        // Nếu người dùng chưa ghét
+        update = {
+          $addToSet: { "ratings.$.dislikedBy": id },
+          $inc: { "ratings.$.dislikes": 1 },
+        };
+        reaction = "dislike"
+        if (isUserLikedComment) {
+          // Nếu người dùng đã thích, bỏ thích
+          update.$pull = { "ratings.$.likedBy": id };
+          update.$inc = { ...update.$inc, "ratings.$.likes": -1 };
+        }
       }
     }
-    
-    return res.json(comment[0])
-  } )
+
+    const result = await Movie.updateOne(
+      { _id: movieId, "ratings._id": commentId },
+      update
+    );
+
+    return res.json({status: true, message: `${reaction} thành công`});
+  });
 }
 module.exports = MovieController;

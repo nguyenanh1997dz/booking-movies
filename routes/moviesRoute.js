@@ -12,7 +12,11 @@ router.delete("/:id", MovieController.deleteMovie)
 router.post("/img", uploadPhoto.single("image"), imgResize, MovieController.uploadImgMovie)
 router.get("/top/top-movies", MovieController.getTopMovies)
 router.delete("/img/:id", MovieController.deleteImageMovie)
-router.post("/add-review", authMiddleware, MovieController.reviewMovies)
+
 router.get("/get-review/:movieId", MovieController.getMovieReviewDetail)
-router.put("/comment/like", authMiddleware, MovieController.likeComment)
+
+router.post("/add-review", authMiddleware, MovieController.reviewMovies) // body:{ movieId, star, comment }
+
+router.put("/comment/reaction", authMiddleware, MovieController.updateCommentReaction) // body:{ commentId, movieId, action }
+
 module.exports = router;
