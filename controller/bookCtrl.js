@@ -124,12 +124,40 @@ class BookController {
     return res.json(book);
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
-    const id = "66c38f81b95afbac2dfd3e39"
-    const book =  await Book.findById(id)
-    const a =  await sendMailService.ticket(book)  
+    const { bookId , method} = req.query;
+    let qrCode = await QRCode.toDataURL(`https://cinema429.vercel.app/tracuu/723c53ca-2c40-41c4-b85e-7cf5f2b10900`);
+    const book = await Book.findById(bookId);
+    const user = await User.findOne({ email: book.email });
+    for (const extra of book.extras) {
+      const { itemId, quantity, price } = extra;
+      const food = await Food.findById(itemId);
+      if (!food) {
+        console.error(`Food item with ID ${itemId} not found.`);
+        continue;
+      }
+      const newQuantity = food.quantity - quantity;
+      const newTotalSales = food.totalSales + quantity;
+      const newTotalSalesPrice = food.totalSalesPrice + price;
+      await Food.findByIdAndUpdate(itemId, {
+        totalSales: newTotalSales,
+        totalSalesPrice: newTotalSalesPrice,
+      });
+    }
+    if (book.payment.status !== "Đã thanh toán") {
+      book.payment.method = method;
+      book.payment.status = "Đã thanh toán";
+      await book.save();
+      if (user) {
+        await User.findByIdAndUpdate(user._id, {
+          $push: { bookings: book._id },
+        });
+      }
+    }
+    const sendMailData =  await sendMailService.ticket(book,qrCode)  
     return res.json({
-      url: book,
+      url: `${process.env.BASE_CLIENT_URL}/thankyou/${bookId}`,
     });
+
   });
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
     try {
