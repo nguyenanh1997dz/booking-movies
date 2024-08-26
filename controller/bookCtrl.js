@@ -9,14 +9,14 @@ const sendEmail = require("../utils/sendMail");
 const axios = require("axios");
 const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
-const {authenticator,totp}  = require("otplib");
-const QRCode = require('qrcode');
+const { authenticator, totp } = require("otplib");
+const QRCode = require("qrcode");
 const sendMailService = require("../service/sendMail");
 
 authenticator.options = {
-  step: 300,  // Thời gian sống của mã OTP (giây)
-  digits: 4,  // Số chữ số của mã OTP
-  window: 1   // Số khoảng thời gian trước và sau thời điểm hiện tại mà OTP có thể được chấp nhận
+  step: 300, // Thời gian sống của mã OTP (giây)
+  digits: 4, // Số chữ số của mã OTP
+  window: 1, // Số khoảng thời gian trước và sau thời điểm hiện tại mà OTP có thể được chấp nhận
 };
 const generateOtp = () => {
   return authenticator.generate(process.env.KEY_SECRET_OTP);
@@ -27,13 +27,13 @@ const verifyOtp = (otp) => {
 
 class BookController {
   static createBook = asyncHandler(async (req, res) => {
-    const { email, discountValue ,seats } = req.body;
+    const { email, discountValue, seats } = req.body;
     if (!Array.isArray(seats) || !seats.length) {
       return res.status(500).json({
         message: "Không có thông tin ghế ngồi",
       });
     }
-    
+
     try {
       validateInput(req);
       const newBook = new Book(req.body);
@@ -50,7 +50,7 @@ class BookController {
         interest,
         newBook._id
       );
-    
+
       return res.redirect(307, redirectUrl);
     } catch (error) {
       return res.status(500).json({
@@ -124,8 +124,8 @@ class BookController {
     return res.json(book);
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
-    const { bookId , method} = req.query;
-  
+    const { bookId, method } = req.query;
+
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
     for (const extra of book.extras) {
@@ -144,11 +144,13 @@ class BookController {
       });
     }
     if (book.payment.status !== "Đã thanh toán") {
-      let qrCode = await QRCode.toDataURL(`https://cinema429.vercel.app/tracuu/${book.uuid}`);
+      let qrCode = await QRCode.toDataURL(
+        `https://cinema429.vercel.app/tracuu/${book.uuid}`
+      );
       book.payment.method = method;
       book.payment.status = "Đã thanh toán";
       await book.save();
-      await sendMailService.ticket(book,qrCode)  
+      await sendMailService.ticket(book, qrCode);
       if (user) {
         await User.findByIdAndUpdate(user._id, {
           $push: { bookings: book._id },
@@ -158,7 +160,6 @@ class BookController {
     return res.json({
       url: `${process.env.BASE_CLIENT_URL}/thankyou/${bookId}`,
     });
-
   });
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
     try {
@@ -182,9 +183,8 @@ class BookController {
     }
   });
   static allTicket = asyncHandler(async (req, res) => {
-    const {limit = 5} = req.query
-    const result = await Book.aggregate( 
-      [
+    const { limit = 5 } = req.query;
+    const result = await Book.aggregate([
       {
         $lookup: {
           from: "movies",
@@ -301,11 +301,11 @@ class BookController {
         },
       },
       {
-        $sort: { dateBooked: -1 } 
+        $sort: { dateBooked: -1 },
       },
       {
-        $limit: +limit
-      }
+        $limit: +limit,
+      },
     ]);
     return res.json(result);
   });
@@ -314,8 +314,7 @@ class BookController {
     if (!id) {
       return res.status(404).json({ message: "Thiếu thông tin" });
     }
-    const result = await Book.aggregate( 
-      [
+    const result = await Book.aggregate([
       {
         $match: {
           _id: new mongoose.Types.ObjectId(id),
@@ -367,7 +366,7 @@ class BookController {
       // Lookup for extra items
       {
         $lookup: {
-          from: "foods", // Collection where extra details are stored
+          from: "foods",
           localField: "extras.itemId",
           foreignField: "_id",
           as: "extraDetails",
@@ -414,36 +413,38 @@ class BookController {
         },
       },
 
+      // Filter out empty objects from the extras array
+      {
+        $addFields: {
+          extras: {
+            $filter: {
+              input: "$extras",
+              as: "extra",
+              cond: { $ne: ["$$extra", {}] },
+            },
+          },
+        },
+      },
+
       // Ensure extras is an empty array if no extras exist
       {
         $addFields: {
           extras: {
             $cond: {
-              if: {
-                $and: [
-                  { $eq: [{ $size: "$extras" }, 1] },
-                  {
-                    $eq: [
-                      { $type: { $arrayElemAt: ["$extras", 0] } },
-                      "object",
-                    ],
-                  },
-                ],
-              },
-              then: [],
-              else: "$extras",
+              if: { $gt: [{ $size: "$extras" }, 0] },
+              then: "$extras",
+              else: [],
             },
           },
         },
-      }
+      },
     ]);
     return res.json(result[0] || {});
   });
   static userTicket = asyncHandler(async (req, res) => {
     const { id } = req.user;
     const user = await User.findById(id);
-    const result = await Book.aggregate( 
-      [
+    const result = await Book.aggregate([
       {
         $match: {
           email: user?.email,
@@ -563,14 +564,13 @@ class BookController {
             },
           },
         },
-      }
+      },
     ]);
     return res.json(result);
   });
   static ticketByUuid = asyncHandler(async (req, res) => {
     const { uuid } = req.params;
-    const result = await Book.aggregate( 
-      [
+    const result = await Book.aggregate([
       {
         $match: {
           uuid: uuid,
@@ -622,7 +622,7 @@ class BookController {
       // Lookup for extra items
       {
         $lookup: {
-          from: "foods", // Collection where extra details are stored
+          from: "foods",
           localField: "extras.itemId",
           foreignField: "_id",
           as: "extraDetails",
@@ -669,28 +669,31 @@ class BookController {
         },
       },
 
+      // Filter out empty objects from the extras array
+      {
+        $addFields: {
+          extras: {
+            $filter: {
+              input: "$extras",
+              as: "extra",
+              cond: { $ne: ["$$extra", {}] },
+            },
+          },
+        },
+      },
+
       // Ensure extras is an empty array if no extras exist
       {
         $addFields: {
           extras: {
             $cond: {
-              if: {
-                $and: [
-                  { $eq: [{ $size: "$extras" }, 1] },
-                  {
-                    $eq: [
-                      { $type: { $arrayElemAt: ["$extras", 0] } },
-                      "object",
-                    ],
-                  },
-                ],
-              },
-              then: [],
-              else: "$extras",
+              if: { $gt: [{ $size: "$extras" }, 0] },
+              then: "$extras",
+              else: [],
             },
           },
         },
-      }
+      },
     ]);
     return res.json(result[0] || {});
   });
@@ -702,10 +705,10 @@ class BookController {
       });
     }
     const isValid = verifyOtp(otp);
-    
+
     if (!isValid) {
       const { delta } = authenticator.verify(otp, process.env.KEY_SECRET_OTP);
-      
+
       let errorMessage = "Mã OTP không hợp lệ";
       if (delta) {
         if (delta > 0) {
@@ -714,13 +717,13 @@ class BookController {
           errorMessage = `Mã OTP đã hết hạn`;
         }
       }
-  
+
       return res.status(400).json({ message: errorMessage });
     }
     const result = await Book.aggregate([
       {
         $match: {
-          email: email
+          email: email,
         },
       },
       {
@@ -847,13 +850,13 @@ class BookController {
       },
     ]);
 
-    return res.json(result)
+    return res.json(result);
   });
   static verifyEmail = asyncHandler(async (req, res) => {
     const { email } = req.body;
     if (!email) throw new Error("Không có email");
-   const otp = generateOtp()
-   
+    const otp = generateOtp();
+
     const html = `
     <p>Xin chào ${email},</p>
     <p>Dưới đây là mã OTP của bạn để tra cứu thông tin vé</p>
@@ -876,24 +879,24 @@ class BookController {
       throw new Error("Đã xảy ra lỗi khi gửi email.");
     }
   });
-  static testQr = asyncHandler(async (req, res)  => {
-    let img = await QRCode.toDataURL('https://cinema429.vercel.app/tracuu/ceb07c3c-bbdb-418e-8b6a-28ba81e3bb25');
+  static testQr = asyncHandler(async (req, res) => {
+    let img = await QRCode.toDataURL(
+      "https://cinema429.vercel.app/tracuu/ceb07c3c-bbdb-418e-8b6a-28ba81e3bb25"
+    );
     const emailData = {
-      to: 'nguyenanh1997dz@gmail.com',
-      subject: 'Your QR Code',
-      text: 'Please find the QR code below.',
+      to: "nguyenanh1997dz@gmail.com",
+      subject: "Your QR Code",
+      text: "Please find the QR code below.",
       html: `
         <p>Please find the QR code below:</p>
         <img src="${img}" alt="QR Code"/>
-      `
+      `,
     };
 
-  
     await sendEmail(emailData);
 
-
-    return res.send("oke")
-  })
+    return res.send("oke");
+  });
 }
 function validateInput(req) {
   const { paymentMethod, email, price } = req.body;
