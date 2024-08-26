@@ -3,8 +3,9 @@ const axios = require("axios");
 const CryptoJS = require("crypto-js");
 const qs = require("qs");
 const moment = require("moment");
-
-
+const QRCode = require('qrcode');
+const sendMailService = require("../service/sendMail");
+const Book = require("../model/bookModel");
 const config = {
   app_id: "2553",
   key1: "PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL",
@@ -151,6 +152,9 @@ class ZaloPayController {
       return res.redirect(url);
     } else {
       if (data.status === '1') {
+        const book = await Book.findById(orderId);
+        let qrCode = await QRCode.toDataURL(`https://cinema429.vercel.app/tracuu/${book.uuid}`);
+        await sendMailService.ticket(book,qrCode)  
         const url = `${process.env.BASE_CLIENT_URL}/thankyou/${orderId}`
         return  res.redirect(url);
       }else{

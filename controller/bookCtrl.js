@@ -125,7 +125,7 @@ class BookController {
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
     const { bookId , method} = req.query;
-    let qrCode = await QRCode.toDataURL(`https://cinema429.vercel.app/tracuu/723c53ca-2c40-41c4-b85e-7cf5f2b10900`);
+  
     const book = await Book.findById(bookId);
     const user = await User.findOne({ email: book.email });
     for (const extra of book.extras) {
@@ -144,16 +144,17 @@ class BookController {
       });
     }
     if (book.payment.status !== "Đã thanh toán") {
+      let qrCode = await QRCode.toDataURL(`https://cinema429.vercel.app/tracuu/${book.uuid}`);
       book.payment.method = method;
       book.payment.status = "Đã thanh toán";
       await book.save();
+      await sendMailService.ticket(book,qrCode)  
       if (user) {
         await User.findByIdAndUpdate(user._id, {
           $push: { bookings: book._id },
         });
       }
     }
-    const sendMailData =  await sendMailService.ticket(book,qrCode)  
     return res.json({
       url: `${process.env.BASE_CLIENT_URL}/thankyou/${bookId}`,
     });
