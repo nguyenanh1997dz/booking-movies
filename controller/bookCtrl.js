@@ -11,6 +11,7 @@ const { default: mongoose } = require("mongoose");
 const { v4: uuidv4 } = require("uuid");
 const {authenticator,totp}  = require("otplib");
 const QRCode = require('qrcode');
+const sendMailService = require("../service/sendMail");
 
 authenticator.options = {
   step: 300,  // Thời gian sống của mã OTP (giây)
@@ -49,6 +50,7 @@ class BookController {
         interest,
         newBook._id
       );
+    
       return res.redirect(307, redirectUrl);
     } catch (error) {
       return res.status(500).json({
@@ -122,37 +124,11 @@ class BookController {
     return res.json(book);
   });
   static confirmVnpayPaymentSuccess = asyncHandler(async (req, res) => {
-    const { bookId , method} = req.query;
-    console.log(bookId);
-    const book = await Book.findById(bookId);
-    const user = await User.findOne({ email: book.email });
-    for (const extra of book.extras) {
-      const { itemId, quantity, price } = extra;
-      const food = await Food.findById(itemId);
-      if (!food) {
-        console.error(`Food item with ID ${itemId} not found.`);
-        continue;
-      }
-      const newQuantity = food.quantity - quantity;
-      const newTotalSales = food.totalSales + quantity;
-      const newTotalSalesPrice = food.totalSalesPrice + price;
-      await Food.findByIdAndUpdate(itemId, {
-        totalSales: newTotalSales,
-        totalSalesPrice: newTotalSalesPrice,
-      });
-    }
-    if (book.payment.status !== "Đã thanh toán") {
-      book.payment.method = method;
-      book.payment.status = "Đã thanh toán";
-      await book.save();
-      if (user) {
-        await User.findByIdAndUpdate(user._id, {
-          $push: { bookings: book._id },
-        });
-      }
-    }
+    const id = "66c38f81b95afbac2dfd3e39"
+    const book =  await Book.findById(id)
+    const a =  await sendMailService.ticket(book)  
     return res.json({
-      url: `${process.env.BASE_CLIENT_URL}/thankyou/${bookId}`,
+      url: book,
     });
   });
   static confirmCancelBookMovie = asyncHandler(async (req, res) => {
@@ -689,7 +665,6 @@ class BookController {
     ]);
     return res.json(result[0] || {});
   });
-
   static verifyOtp = asyncHandler(async (req, res) => {
     const { otp, email } = req.body;
     if (!otp || !email) {
@@ -845,7 +820,6 @@ class BookController {
 
     return res.json(result)
   });
-
   static verifyEmail = asyncHandler(async (req, res) => {
     const { email } = req.body;
     if (!email) throw new Error("Không có email");
@@ -873,7 +847,6 @@ class BookController {
       throw new Error("Đã xảy ra lỗi khi gửi email.");
     }
   });
-
   static testQr = asyncHandler(async (req, res)  => {
     let img = await QRCode.toDataURL('https://cinema429.vercel.app/tracuu/ceb07c3c-bbdb-418e-8b6a-28ba81e3bb25');
     const emailData = {
@@ -893,7 +866,6 @@ class BookController {
     return res.send("oke")
   })
 }
-
 function validateInput(req) {
   const { paymentMethod, email, price } = req.body;
   if (!paymentMethod || !email || !price) {

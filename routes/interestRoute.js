@@ -1,5 +1,5 @@
 const express = require("express");
-const { authMiddleware } = require("../middleware/authMiddlewere");
+const { authMiddleware,isAdmin } = require("../middleware/authMiddlewere");
 const InterestController = require("../controller/interestCtrl");
 const router = express.Router();
 
@@ -8,8 +8,8 @@ router.get("/movie", InterestController.getInterestByMovie) // params =  ?idMovi
 router.get("/detail/:id", InterestController.getInterest)
 router.get("/branch", InterestController.getAllBranchInterest); // params = branchId , movieId
 router.get("/movie/:id", InterestController.getMovieInterest);
-router.post("/", InterestController.createInterest)
+router.post("/",authMiddleware,isAdmin, InterestController.createInterest)
 router.put("/updateStatus", InterestController.updateStatusInterest)
-router.put("/:id", InterestController.updateInterest)
+router.put("/:id",authMiddleware,isAdmin, InterestController.updateInterest)
 
 module.exports = router;
