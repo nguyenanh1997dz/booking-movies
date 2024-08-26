@@ -61,6 +61,7 @@ class StatisticalController {
           giatruocgiam: 1,
           giasaugiam: 1,
           totalicketPrice: 1,
+          totalExtrasPrice:1,
           vedaban: 1,
           ghedaban: 1,
         },
