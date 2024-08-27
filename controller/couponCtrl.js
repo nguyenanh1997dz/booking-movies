@@ -46,5 +46,20 @@ class CouponController {
       res.status(500).json({ message: error.message });
     }
   });
+  static delete = asyncHandler(async (req, res)  => {
+    try {
+      const {id} = req.params
+      await Coupon.findByIdAndDelete(id)
+      // await branch.save()
+      return res.status(200).json({
+          message: "Xóa Blog thành công",
+      });
+
+  } catch (error) {
+      return res.status(500).json({
+          message: "Có lỗi trong quá trình xóa blog " + error.message
+      })
+  }
+  })
 }
 module.exports = CouponController;

@@ -7,11 +7,8 @@ class StatisticalController {
     const result = await Book.aggregate([
       {
         $match: {
-          "payment.status": "Đã thanh toán",
+          "payment.status": "Đã thanh toán", // Chỉ tính các đơn hàng đã thanh toán
         },
-      },
-      {
-        $unwind: { path: "$extras", preserveNullAndEmptyArrays: true },
       },
       {
         $lookup: {
@@ -22,63 +19,55 @@ class StatisticalController {
         },
       },
       { $unwind: "$interestDetails" },
-
       {
         $group: {
-          _id: {
-            day: { $dateToString: { format: "%m/%d/%Y", date: "$createdAt" } },
+          _id: "$_id", // Nhóm theo ID vé để loại bỏ trùng lặp
+          createdAt: { $first: "$createdAt" }, // Lấy thời gian tạo của vé
+          totalPrice: { $first: "$totalPrice" },
+          finalPrice: { $first: "$price" }, // Lấy giá trước giảm
+          extrasPrice: {
+            $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] },
           },
-          totalTicketPrice: {
+          ticketPrice: {
             $sum: {
               $multiply: [{ $size: "$seats" }, "$interestDetails.price"],
             },
           },
-
-          finalAmount: { $sum: "$totalPrice" },
-          totalExtrasPrice: {
-            $sum: { $ifNull: [{ $sum: "$extras.price" }, 0] },
-          },
-          totalDiscountAmount: {
-            $sum: {
-              $cond: {
-                if: { $eq: ["$discountValue", 0] },
-                then: 0,
-                else: {
-                  $multiply: [
-                    {
-                      $add: [
-                        "$price",
-                        { $multiply: ["$extras.quantity", "$extras.price"] },
-                      ],
-                    },
-                    { $divide: ["$discountValue", 100] },
-                  ],
-                },
-              },
+          ticketSold: { $sum: 1 },
+          seatsSold: { $sum: { $size: "$seats" } },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            day: {
+              $dateToString: { format: "%m-%d-%Y", date: "$createdAt" },
             },
           },
-          totalAmount: {
-            $sum: {
-              $add: [
-                "$price",
-                { $multiply: ["$extras.quantity", "$extras.price"] },
-              ],
-            },
-          },
+          giatruocgiam: { $sum: "$totalPrice" },
+          giasaugiam: { $sum: "$finalPrice" },
+          vedaban: { $sum: "$ticketSold" },
+          ghedaban: { $sum: "$seatsSold" },
+          ticketIds: { $addToSet: "$_id" },
+          totalExtrasPrice: { $sum: "$extrasPrice" },
+          totalicketPrice: { $sum: "$ticketPrice" },
         },
       },
       {
         $project: {
           _id: 0,
           day: "$_id.day",
-          totalTicketPrice: 1,
-          totalExtrasPrice: 1,
-          totalDiscountAmount: 1,
-          finalAmount: 1,
+          amount: 1,
+          giatruocgiam: 1,
+          giasaugiam: 1,
+          totalicketPrice: 1,
+          totalExtrasPrice:1,
+          vedaban: 1,
+          ghedaban: 1,
         },
       },
       {
-        $sort: { day: 1 },
+        $sort: { day: 1 }, // Sắp xếp theo ngày
       },
     ]);
     return res.json(result);
