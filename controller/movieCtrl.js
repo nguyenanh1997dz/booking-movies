@@ -271,6 +271,7 @@ class MovieController {
               star: "$ratings.star",
               comment: "$ratings.comment",
               user: "$user.fullName",
+              userId: "$user._id",
               date: "$ratings.formattedDate",
               like: "$ratings.likes",
               dislike: "$ratings.dislikes",
