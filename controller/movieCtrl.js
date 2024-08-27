@@ -276,6 +276,9 @@ class MovieController {
               dislike: "$ratings.dislikes",
               likedBy: "$ratings.likedBy",
               dislikedBy: "$ratings.dislikedBy",
+              userId: "$user._id",
+              googleImage: "$user.googleImage",
+              avatar: "$user.avatar.url"
             },
           },
           starCounts: {
