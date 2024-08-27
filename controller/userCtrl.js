@@ -256,7 +256,7 @@ class UserController {
   });
   static updateUser = asyncHandler(async (req, res) => {
     const { id } = req.params;
-    const { fullName, password, address, phone, avatar } = req.body;
+    const { fullName, password, address, phone, avatar ,role } = req.body;
 
     try {
       const user = await User.findOne({ _id: id });
@@ -269,6 +269,7 @@ class UserController {
       user.password = password ?? user.password;
       user.address = address ?? user.address;
       user.phone = phone ?? user.phone;
+      user.role = role ?? user.role;
       if (avatar) {
         user.avatar.url = avatar.url;
         user.avatar.publicId = avatar.publicId;
